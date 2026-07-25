@@ -17,6 +17,7 @@ public:
     explicit P2PDiscovery(QObject *parent = nullptr);
 
     QString statusMessage() const;
+    QStringList peerNames() const;
 
     Q_INVOKABLE void startDiscovery();
     Q_INVOKABLE void stopDiscovery();
@@ -29,6 +30,7 @@ private Q_SLOTS:
     void onPeerAppeared(const QString &uni);
 
 private:
+    void setStatusMessage(const QString &status);
     QString m_statusMessage;
     QStringList m_peerNames;
     NetworkManager::WifiP2PDevice::Ptr m_device;
