@@ -1,0 +1,5 @@
+/build/
+/cmake-build-debug/
+/notes/
+/.idea/
+*.user
