@@ -2,6 +2,7 @@ import QtCore
 import QtQml
 import QtQuick
 import QtQuick.Controls as Controls
+import QtQuick.Layouts
 
 import org.kde.kirigami as Kirigami
 
@@ -16,9 +17,34 @@ Kirigami.ApplicationWindow {
     title: "KCast"
 
     pageStack.initialPage: Kirigami.Page {
-        Controls.Label {
-            text: "Hello KCast"
+        title: i18nc("@title", "KCast")
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Controls.Label {
+                text: p2p.statusMessage
+                Layout.fillWidth: true
+            }
+
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                model: p2p.peerNames
+                delegate: Controls.ItemDelegate {
+                    width: ListView.view.width
+                    text: modelData
+                }
+            }
         }
+
+        actions: [
+            Kirigami.Action {
+                text: "Discover"
+                icon.name: "view-refresh"
+                onTriggered: p2p.startDiscovery()
+            }
+        ]
     }
 }
 

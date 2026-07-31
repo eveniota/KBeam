@@ -36,10 +36,9 @@ void P2PDiscovery::onPeerAppeared(const QString& uni)
     {
         return;
     }
-    qInfo() << "Peer found: "
-            << peer->name()
-            << peer->hardwareAddress()
-            << "WFD bytes: " << peer->wfdIEs().size();
+    const QString label = peer->name().isEmpty() ? peer->hardwareAddress() : peer->name();
+    m_peerNames.append(label);
+    Q_EMIT peersChanged();
 }
 
 QString P2PDiscovery::statusMessage() const
@@ -58,6 +57,8 @@ void P2PDiscovery::startDiscovery()
     {
         return;
     }
+    m_peerNames.clear();
+    Q_EMIT peersChanged();
     auto *watcher = new QDBusPendingCallWatcher(m_device->startFind(), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, [this, watcher](QDBusPendingCallWatcher *)
     {

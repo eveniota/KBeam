@@ -1,5 +1,5 @@
 add_executable(kcast
-        p2pdiscovery.cpp
+        main.cpp
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -7,7 +7,6 @@ ecm_target_qml_sources(kcast SOURCES ui/Main.qml)
 ecm_finalize_qml_module(kcast)
 
 target_sources(kcast PRIVATE
-    main.cpp
     p2pdiscovery.cpp
 )
 
