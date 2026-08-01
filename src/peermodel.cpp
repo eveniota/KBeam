@@ -47,10 +47,24 @@ void PeerModel::clear()
     endResetModel();
 }
 
-void PeerModel::addPeer(const PeerInfo &peer)
+void PeerModel::addPeer(const PeerInfo &info)
 {
     const int row = m_peers.size();
     beginInsertRows(QModelIndex(), row, row);
-    m_peers.append(peer);
+    m_peers.append(info);
     endInsertRows();
+}
+
+void PeerModel::removePeer(const QString &uni)
+{
+    for (int i = 0; i < m_peers.size(); ++i)
+    {
+        if (m_peers[i].uni == uni)
+        {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_peers.removeAt(i);
+            endRemoveRows();
+            break;
+        }
+    }
 }

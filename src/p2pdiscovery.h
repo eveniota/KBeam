@@ -21,12 +21,13 @@ public:
 
     Q_INVOKABLE void startDiscovery();
     Q_INVOKABLE void stopDiscovery();
-
+    Q_INVOKABLE void connectToPeer(const QString &mac);
 Q_SIGNALS:
     void statusMessageChanged();
 
 private Q_SLOTS:
     void onPeerAppeared(const QString &uni);
+    void onPeerDisappeared(const QString &uni);
 
 private:
     void setStatusMessage(const QString &status);

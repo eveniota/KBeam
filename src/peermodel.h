@@ -34,6 +34,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
     void clear();
     void addPeer(const PeerInfo &info);
+    void removePeer(const QString &uni);
 
 private:
     QList<PeerInfo> m_peers;

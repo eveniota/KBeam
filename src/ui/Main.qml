@@ -34,6 +34,7 @@ Kirigami.ApplicationWindow {
                 delegate: Controls.ItemDelegate {
                     width: ListView.view.width
                     text: model.name
+                    onClicked: p2p.connectToPeer(model.mac)
                 }
             }
         }
