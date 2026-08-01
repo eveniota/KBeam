@@ -114,9 +114,7 @@ Kirigami.ApplicationWindow {
                     Layout.preferredWidth: Kirigami.Units.iconSizes.huge
                     Layout.preferredHeight: Kirigami.Units.iconSizes.huge
                     visible: P2PDiscovery.state !== P2PDiscovery.Connecting
-                    source: P2PDiscovery.state === P2PDiscovery.Connected
-                        ? "network-wireless-connected"
-                        : "dialog-error"
+                    source: P2PDiscovery.state === P2PDiscovery.Connected ? "network-wireless-connected" : "dialog-error"
                 }
 
                 Controls.Label {
