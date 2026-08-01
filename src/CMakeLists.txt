@@ -1,6 +1,8 @@
 add_executable(kcast
         main.cpp
         peermodel.cpp
+        screencastportal.h
+        screencastportal.cpp
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)

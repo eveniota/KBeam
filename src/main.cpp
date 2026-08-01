@@ -6,8 +6,9 @@
 #include <QQuickStyle>
 #include <QDebug>
 #include <QQmlContext>
-#include <KLocalizedContext>
+#include <QQmlEngine>
 #include <KLocalizedString>
+#include <KLocalizedContext>
 #include "p2pdiscovery.h"
 
 int main(int argc, char **argv)
@@ -18,7 +19,7 @@ int main(int argc, char **argv)
     QQmlApplicationEngine engine;
     KLocalizedString::setApplicationDomain("kcast");
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-    engine.rootContext()->setContextProperty(QStringLiteral("p2p"), &discovery);
+    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery", &discovery);
     engine.loadFromModule("org.kde.kcast", "Main");
     return app.exec();
 }
