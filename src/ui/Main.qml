@@ -30,10 +30,10 @@ Kirigami.ApplicationWindow {
             ListView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: p2p.peerNames
+                model: p2p.peers
                 delegate: Controls.ItemDelegate {
                     width: ListView.view.width
-                    text: modelData
+                    text: model.name
                 }
             }
         }

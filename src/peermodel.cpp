@@ -5,9 +5,7 @@
 #include "peermodel.h"
 
 PeerModel::PeerModel(QObject* parent) : QAbstractListModel(parent)
-{
-
-}
+{}
 
 int PeerModel::rowCount(const QModelIndex& parent) const
 {

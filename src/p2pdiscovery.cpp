@@ -7,9 +7,11 @@
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QDebug>
+#include "peermodel.h"
 
 P2PDiscovery::P2PDiscovery(QObject* parent) : QObject(parent)
 {
+    m_peers = new PeerModel(this);
     for (const auto& device : NetworkManager::networkInterfaces())
     {
         if (device->type() == NetworkManager::Device::WifiP2P)
@@ -36,9 +38,11 @@ void P2PDiscovery::onPeerAppeared(const QString& uni)
     {
         return;
     }
-    const QString label = peer->name().isEmpty() ? peer->hardwareAddress() : peer->name();
-    m_peerNames.append(label);
-    Q_EMIT peersChanged();
+    PeerInfo peerInfo;
+    peerInfo.name = peer->name().isEmpty() ? peer->hardwareAddress(): peer->name();
+    peerInfo.mac = peer->hardwareAddress();
+    peerInfo.uni = uni;
+    m_peers->addPeer(peerInfo);
 }
 
 QString P2PDiscovery::statusMessage() const
@@ -46,9 +50,9 @@ QString P2PDiscovery::statusMessage() const
     return m_statusMessage;
 }
 
-QStringList P2PDiscovery::peerNames() const
+PeerModel* P2PDiscovery::peers() const
 {
-    return m_peerNames;
+    return m_peers;
 }
 
 void P2PDiscovery::startDiscovery()
@@ -57,8 +61,7 @@ void P2PDiscovery::startDiscovery()
     {
         return;
     }
-    m_peerNames.clear();
-    Q_EMIT peersChanged();
+    m_peers->clear();
     auto *watcher = new QDBusPendingCallWatcher(m_device->startFind(), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, [this, watcher](QDBusPendingCallWatcher *)
     {
