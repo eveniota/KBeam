@@ -23,18 +23,18 @@ Kirigami.ApplicationWindow {
             anchors.fill: parent
 
             Controls.Label {
-                text: p2p.statusMessage
+                text: P2PDiscovery.statusMessage
                 Layout.fillWidth: true
             }
 
             ListView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: p2p.peers
+                model: P2PDiscovery.peers
                 delegate: Controls.ItemDelegate {
                     width: ListView.view.width
                     text: model.hasWfd ? model.name  + i18nc("@item:inlistbox", " (WFD)") : model.name + i18nc("@item:inlistbox", " (P2P)")
-                    onClicked: p2p.connectToPeer(model.mac)
+                    onClicked: P2PDiscovery.connectToPeer(model.mac)
                 }
             }
         }
@@ -43,7 +43,7 @@ Kirigami.ApplicationWindow {
             Kirigami.Action {
                 text: "Discover"
                 icon.name: "view-refresh"
-                onTriggered: p2p.startDiscovery()
+                onTriggered: P2PDiscovery.startDiscovery()
             }
         ]
     }

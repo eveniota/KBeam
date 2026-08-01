@@ -27,6 +27,7 @@ QVariant PeerModel::data(const QModelIndex& index, int role) const
         case NameRole: return peer.name;
         case MacRole: return peer.mac ;
         case UniRole: return peer.uni ;
+        case HasWfdRole: return peer.hasWfd ;
         default: return {};
     }
 }
@@ -36,7 +37,8 @@ QHash<int, QByteArray> PeerModel::roleNames() const
     return {
         {NameRole, "name"},
             {MacRole, "mac"},
-            {UniRole, "uni"}
+            {UniRole, "uni"},
+        {HasWfdRole, "hasWfd"},
     };
 }
 

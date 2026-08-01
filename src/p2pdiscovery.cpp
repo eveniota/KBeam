@@ -4,6 +4,8 @@
 #include "p2pdiscovery.h"
 #include <NetworkManagerQt/Manager>
 #include <NetworkManagerQt/WifiP2PSetting>
+#include <NetworkManagerQt/ActiveConnection>
+#include <NetworkManagerQt/IpConfig>
 #include <NetworkManagerQt/ConnectionSettings>
 #include <NetworkManagerQt/Device>
 #include <QDBusPendingCallWatcher>
@@ -50,14 +52,28 @@ void P2PDiscovery::onPeerAppeared(const QString& uni)
     m_peers->addPeer(peerInfo);
 }
 
-QString P2PDiscovery::statusMessage() const
+P2PDiscovery::State P2PDiscovery::state() const
 {
-    return m_statusMessage;
+    return m_state;
 }
 
 PeerModel* P2PDiscovery::peers() const
 {
     return m_peers;
+}
+
+QString P2PDiscovery::statusMessage() const
+{
+    return m_statusMessage;
+}
+
+void P2PDiscovery::setStatusMessage(const QString &status)
+{
+    if (status == m_statusMessage) {
+        return;
+    }
+    m_statusMessage = status;
+    Q_EMIT statusMessageChanged();
 }
 
 void P2PDiscovery::startDiscovery()
@@ -73,9 +89,11 @@ void P2PDiscovery::startDiscovery()
         QDBusPendingReply<> reply = *watcher;
         if (reply.isError())
         {
-            setStatusMessage(reply.error().message());
+            setState(Error);
+            setStatusMessage(QStringLiteral("Discovery Failed"));
         } else
         {
+            setState(Discovering);
             setStatusMessage(QStringLiteral("Discovering..."));
         }
         watcher->deleteLater();
@@ -89,6 +107,7 @@ void P2PDiscovery::stopDiscovery()
         return;
     }
     m_device->stopFind();
+    setState(Idle);
     setStatusMessage(QStringLiteral("Discovery Stopped"));
 }
 
@@ -105,11 +124,13 @@ void P2PDiscovery::connectToPeer(const QString& mac)
     auto wifiP2P = settings.setting(NetworkManager::Setting::WifiP2P).staticCast<NetworkManager::WifiP2PSetting>();
     if (!wifiP2P)
     {
+        setState(Error);
         setStatusMessage(QStringLiteral("Missing wifi-p2p setting"));
         return;
     }
     wifiP2P->setPeer(mac);
     wifiP2P->setInitialized(true);
+    setState(Connecting);
     setStatusMessage(QStringLiteral("Connecting to ") + mac);
     auto *watcher = new QDBusPendingCallWatcher(
         NetworkManager::addAndActivateConnection2(
@@ -125,26 +146,56 @@ void P2PDiscovery::connectToPeer(const QString& mac)
             QDBusPendingReply<QDBusObjectPath, QDBusObjectPath> reply = *watcher;
             if (reply.isError())
             {
+                setState(Error);
                 setStatusMessage(reply.error().message());
-            } else
-            {
-                setStatusMessage(QStringLiteral("Success: Connected"));
+                watcher->deleteLater();
+                return;
             }
+            const QDBusObjectPath activePath = reply.argumentAt<1>();
+            NetworkManager::ActiveConnection::Ptr active = NetworkManager::findActiveConnection(activePath.path());
+
+            if (!active)
+            {
+                setState(Error);
+                setStatusMessage(QStringLiteral("No active connection found"));
+                watcher->deleteLater();
+                return;
+            }
+            auto reportIp = [this, active]() {
+                if (!active || active->state() != NetworkManager::ActiveConnection::Activated) {
+                   return;
+                }
+                const NetworkManager::IpConfig cfg = active->ipV4Config();
+                if (!cfg.isValid() || cfg.addresses().isEmpty()) {
+                   return;
+                }
+                const QString ip = cfg.addresses().constFirst().ip().toString();
+                setState(Connected);
+                setStatusMessage(QStringLiteral("Connected — ") + ip);
+            };
+
+            connect(active.data(), &NetworkManager::ActiveConnection::stateChanged, this, reportIp);
+            connect(active.data(), &NetworkManager::ActiveConnection::ipV4ConfigChanged, this, reportIp);
+            reportIp();
+
             watcher->deleteLater();
         });
 }
 
-void P2PDiscovery::setStatusMessage(const QString& status)
+void P2PDiscovery::setState(State state)
 {
-    if (status == m_statusMessage)
+    if (m_state == state)
     {
         return;
     }
-    m_statusMessage = status;
-    Q_EMIT statusMessageChanged();
+    m_state = state;
+    Q_EMIT stateChanged();
 }
+
 
 void P2PDiscovery::onPeerDisappeared(const QString &uni)
 {
     m_peers->removePeer(uni);
 }
+
+
