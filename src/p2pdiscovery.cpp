@@ -46,6 +46,7 @@ void P2PDiscovery::onPeerAppeared(const QString& uni)
     peerInfo.name = peer->name().isEmpty() ? peer->hardwareAddress(): peer->name();
     peerInfo.mac = peer->hardwareAddress();
     peerInfo.uni = uni;
+    peerInfo.hasWfd = !peer->wfdIEs().isEmpty();
     m_peers->addPeer(peerInfo);
 }
 

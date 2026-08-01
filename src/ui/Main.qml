@@ -33,7 +33,7 @@ Kirigami.ApplicationWindow {
                 model: p2p.peers
                 delegate: Controls.ItemDelegate {
                     width: ListView.view.width
-                    text: model.name
+                    text: model.hasWfd ? model.name  + i18nc("@item:inlistbox", " (WFD)") : model.name + i18nc("@item:inlistbox", " (P2P)")
                     onClicked: p2p.connectToPeer(model.mac)
                 }
             }

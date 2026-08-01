@@ -16,6 +16,7 @@ struct PeerInfo
     QString name;
     QString mac;
     QString uni;
+    bool hasWfd = false;
 };
 
 class PeerModel : public QAbstractListModel {
@@ -25,9 +26,9 @@ public:
         NameRole = Qt::UserRole + 1,
         MacRole,
         UniRole,
+        HasWfdRole,
     };
     Q_ENUM(Roles)
-
     explicit PeerModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
