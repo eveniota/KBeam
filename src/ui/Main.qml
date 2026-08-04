@@ -17,9 +17,13 @@ Kirigami.ApplicationWindow {
         id: findPage
         title: i18nc("@title", "KCast")
 
+        readonly property string bannerText: ScreencastPortal.statusMessage.length > 0
+            ? ScreencastPortal.statusMessage
+            : P2PDiscovery.statusMessage
+
         header: Kirigami.InlineMessage {
-            visible: P2PDiscovery.statusMessage.length > 0 && pageStack.depth === 1
-            text: P2PDiscovery.statusMessage
+            visible: findPage.bannerText.length > 0 && pageStack.depth === 1
+            text: findPage.bannerText
             type: P2PDiscovery.state === P2PDiscovery.Error
                 ? Kirigami.MessageType.Error
                 : Kirigami.MessageType.Information
@@ -84,6 +88,11 @@ Kirigami.ApplicationWindow {
                 icon.name: "view-refresh"
                 enabled: P2PDiscovery.state !== P2PDiscovery.Connecting
                 onTriggered: P2PDiscovery.startDiscovery()
+            },
+            Kirigami.Action {
+                text: i18nc("@action:button", "Cast")
+                icon.name: "video-display"
+                onTriggered: ScreencastPortal.start()
             }
         ]
     }

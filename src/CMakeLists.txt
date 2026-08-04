@@ -1,8 +1,6 @@
 add_executable(kcast
         main.cpp
         peermodel.cpp
-        screencastportal.h
-        screencastportal.cpp
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -11,6 +9,7 @@ ecm_finalize_qml_module(kcast)
 
 target_sources(kcast PRIVATE
     p2pdiscovery.cpp
+    screencastportal.cpp
 )
 
 target_link_libraries(kcast PRIVATE
@@ -19,6 +18,7 @@ target_link_libraries(kcast PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::QuickControls2
+    Qt6::DBus
     KF6::Kirigami
     KF6::I18n
     KF6::CoreAddons

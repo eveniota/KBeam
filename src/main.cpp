@@ -10,6 +10,7 @@
 #include <KLocalizedString>
 #include <KLocalizedContext>
 #include "p2pdiscovery.h"
+#include "screencastportal.h"
 
 int main(int argc, char **argv)
 {
@@ -20,6 +21,8 @@ int main(int argc, char **argv)
     KLocalizedString::setApplicationDomain("kcast");
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
     qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery", &discovery);
+    ScreencastPortal screencast;
+    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "ScreencastPortal", &screencast);
     engine.loadFromModule("org.kde.kcast", "Main");
     return app.exec();
 }
