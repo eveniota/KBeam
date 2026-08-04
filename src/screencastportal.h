@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QDBusObjectPath>
 
 class ScreencastPortal : public QObject
 {
@@ -14,7 +15,7 @@ class ScreencastPortal : public QObject
 public:
     explicit ScreencastPortal(QObject *parent = nullptr);
     QString statusMessage() const;
-
+    void start() const;
     Q_INVOKABLE void start();
 
 Q_SIGNALS:
@@ -24,6 +25,9 @@ Q_SIGNALS:
 
 private:
     void setStatusMessage(const QString &status);
+    QString makeToken(const QString &prefix) const;
+    void createSession();
+    void onCreateSessionResponse(uint response, const QVariantMap &results);
     QString m_statusMessage;
     QDBusObjectPath m_sessionPath;
 };

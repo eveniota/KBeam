@@ -13,7 +13,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 
-find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Qt6::DBus)
+find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 DBus)
 find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami I18n CoreAddons NetworkManagerQt)
 
 add_subdirectory(src)
