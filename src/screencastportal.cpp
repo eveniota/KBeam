@@ -9,6 +9,28 @@
 #include <QDBusObjectPath>
 #include <QRandomGenerator>
 #include <QDBusArgument>
+#include <QDBusUnixFileDescriptor>
+
+struct PortalStream {
+       uint nodeId = 0;
+       QVariantMap options;
+   };
+
+   QDBusArgument &operator<<(QDBusArgument &argument, const PortalStream &stream)
+   {
+       argument.beginStructure();
+       argument << stream.nodeId << stream.options;
+       argument.endStructure();
+       return argument;
+   }
+
+   const QDBusArgument &operator>>(const QDBusArgument &argument, PortalStream &stream)
+   {
+       argument.beginStructure();
+       argument >> stream.nodeId >> stream.options;
+       argument.endStructure();
+       return argument;
+   }
 
 ScreencastPortal::ScreencastPortal (QObject *parent)
     : QObject(parent)
@@ -70,7 +92,7 @@ void ScreencastPortal::createSession() {
         QStringLiteral("org.freedesktop.portal.Request"),
         QStringLiteral("Response"),
         this,
-        SLOT(onCreateSessionResponse(uint, QVariantMap)));
+        SLOT(onCreateSessionResponse(uint,QVariantMap)));
 
     if (!ok)
     {
@@ -88,8 +110,17 @@ void ScreencastPortal::onCreateSessionResponse(uint response, const QVariantMap 
         return;
     }
 
-    m_sessionPath = results.value(QStringLiteral("session_handle")).value<QDBusObjectPath>();
-    setStatusMessage(QStringLiteral("Selecting sources.."));
+    const QVariant handle = results.value(QStringLiteral("session_handle"));
+    if (handle.canConvert<QDBusObjectPath>()) {
+        m_sessionPath = handle.value<QDBusObjectPath>();
+    } else {
+        m_sessionPath = QDBusObjectPath(handle.toString());
+    }
+    if (m_sessionPath.path().isEmpty()) {
+        setStatusMessage(QStringLiteral("Missing session_handle"));
+        Q_EMIT failed(QStringLiteral("Missing session_handle"));
+        return;
+    }
     selectSources();
 }
 
@@ -185,7 +216,7 @@ void ScreencastPortal::startSession()
         QStringLiteral("org.freedesktop.portal.Request"),
         QStringLiteral("Response"),
         this,
-        SLOT(onStartResponse(uint, QVariantMap)));
+        SLOT(onStartResponse(uint,QVariantMap)));
 }
 
 void ScreencastPortal::onStartResponse(uint response, const QVariantMap &results)
@@ -197,22 +228,50 @@ void ScreencastPortal::onStartResponse(uint response, const QVariantMap &results
     }
     QDBusArgument arg = results.value(QStringLiteral("streams")).value<QDBusArgument>();
 
-    arg.beginArray();
-    if (arg.atEnd()) {
-        arg.endArray();
-        setStatusMessage(QStringLiteral("No streams"));
-        Q_EMIT failed(QStringLiteral("No streams"));
+    const QList<PortalStream> streams =
+      qdbus_cast<QList<PortalStream>>(results.value(QStringLiteral("streams")));
+
+    if (streams.isEmpty()) {
+       setStatusMessage(QStringLiteral("No streams"));
+       Q_EMIT failed(QStringLiteral("No streams"));
+       return;
+    }
+
+    const uint nodeId = streams.constFirst().nodeId;
+    setStatusMessage(QStringLiteral("Opening PipeWire remote…"));
+    openPipeWireRemote(nodeId);
+    openPipeWireRemote(nodeId);
+}
+
+void ScreencastPortal::openPipeWireRemote(uint nodeId)
+{
+    QDBusInterface portal(
+        QStringLiteral("org.freedesktop.portal.Desktop"),
+        QStringLiteral("/org/freedesktop/portal/desktop"),
+        QStringLiteral("org.freedesktop.portal.ScreenCast"),
+        QDBusConnection::sessionBus());
+
+    const QDBusReply<QDBusUnixFileDescriptor> reply =
+           portal.call(QStringLiteral("OpenPipeWireRemote"),
+                       QVariant::fromValue(m_sessionPath),
+                       QVariantMap{});
+
+    if (!reply.isValid()) {
+        setStatusMessage(reply.error().message());
+        Q_EMIT failed(reply.error().message());
+        return;
+    }
+    const int fd = reply.value().takeFileDescriptor();
+    if (fd < 0) {
+        setStatusMessage(QStringLiteral("Invalid PipeWire FD"));
+        Q_EMIT failed(QStringLiteral("Invalid PipeWire FD"));
         return;
     }
 
-    uint nodeId = 0;
-    QVariantMap streamOpts;
-    arg.beginStructure();
-    arg >> nodeId >> streamOpts;
-    arg.endStructure();
-    arg.endArray();
-
-    setStatusMessage(QStringLiteral("Got stream node ") + QString::number(nodeId));
+    setStatusMessage(QStringLiteral("Screencast ready (fd=%1, node=%2)")
+                         .arg(fd)
+                         .arg(nodeId));
+    Q_EMIT started(fd, nodeId);
 }
 
 

@@ -32,6 +32,7 @@ private:
     void createSession();
     void selectSources();
     void startSession();
+    void openPipeWireRemote(uint nodeId);
     QString m_statusMessage;
     QDBusObjectPath m_sessionPath;
 };
