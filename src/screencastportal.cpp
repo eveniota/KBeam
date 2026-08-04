@@ -8,6 +8,7 @@
 #include <QDBusReply>
 #include <QDBusObjectPath>
 #include <QRandomGenerator>
+#include <QDBusArgument>
 
 ScreencastPortal::ScreencastPortal (QObject *parent)
     : QObject(parent)
@@ -69,18 +70,18 @@ void ScreencastPortal::createSession() {
         QStringLiteral("org.freedesktop.portal.Request"),
         QStringLiteral("Response"),
         this,
-        SLOT(onCreateSessinResponse(uint, QVariantMap)));
+        SLOT(onCreateSessionResponse(uint, QVariantMap)));
 
     if (!ok)
     {
         setStatusMessage(QStringLiteral("Failed to listen for createSession response"));
-        Q_EMIT failed(reply.error().message());
+        Q_EMIT failed(QStringLiteral("Failed to listen for createSession response"));
     }
 }
 
 void ScreencastPortal::onCreateSessionResponse(uint response, const QVariantMap &results)
 {
-    if (response == 0)
+    if (response != 0)
     {
         setStatusMessage(QStringLiteral("CreateSession cancelled or failed"));
         Q_EMIT failed(QStringLiteral("CreateSession cancelled or failed"));
@@ -88,7 +89,6 @@ void ScreencastPortal::onCreateSessionResponse(uint response, const QVariantMap 
     }
 
     m_sessionPath = results.value(QStringLiteral("session_handle")).value<QDBusObjectPath>();
-    setStatusMessage(QStringLiteral("Session ready: ") + m_sessionPath.path());
     setStatusMessage(QStringLiteral("Selecting sources.."));
     selectSources();
 }
@@ -138,14 +138,81 @@ void ScreencastPortal::selectSources()
 
 void ScreencastPortal::onSelectSourcesResponse(uint response, const QVariantMap &results)
 {
-    Q_UNUSED(response);
+    Q_UNUSED(results);
     if (response != 0)
     {
         setStatusMessage(QStringLiteral("SelectSources cancelled or failed"));
         Q_EMIT failed(QStringLiteral("SelectSources cancelled or failed"));
         return;
     }
-    setStatusMessage(QStringLiteral("Session ready"));
+    setStatusMessage(QStringLiteral("Sources selected"));
+    startSession();
+}
+
+void ScreencastPortal::startSession()
+{
+    if (m_sessionPath.path().isEmpty())
+    {
+        setStatusMessage(QStringLiteral("No Session"));
+        Q_EMIT failed(QStringLiteral("No Session"));
+        return;
+    }
+    QDBusInterface portal(
+        QStringLiteral("org.freedesktop.portal.Desktop"),
+        QStringLiteral("/org/freedesktop/portal/desktop"),
+        QStringLiteral("org.freedesktop.portal.ScreenCast"),
+        QDBusConnection::sessionBus());
+
+    const QString requestToken = makeToken(QStringLiteral("kcast_start_"));
+    const QVariantMap options = {
+        {QStringLiteral("handle_token"), requestToken},
+    };
+
+    const QDBusReply<QDBusObjectPath> reply = portal.call(QStringLiteral("Start"),
+        QVariant::fromValue(m_sessionPath),
+        QString(),
+        options);
+
+    if (!reply.isValid())
+    {
+        setStatusMessage(reply.error().message());
+        Q_EMIT failed(reply.error().message());
+        return;
+    }
+    QDBusConnection::sessionBus().connect(
+        QString(),
+        reply.value().path(),
+        QStringLiteral("org.freedesktop.portal.Request"),
+        QStringLiteral("Response"),
+        this,
+        SLOT(onStartResponse(uint, QVariantMap)));
+}
+
+void ScreencastPortal::onStartResponse(uint response, const QVariantMap &results)
+{
+    if (response != 0) {
+        setStatusMessage(QStringLiteral("Start cancelled or failed"));
+        Q_EMIT failed(QStringLiteral("Start failed"));
+        return;
+    }
+    QDBusArgument arg = results.value(QStringLiteral("streams")).value<QDBusArgument>();
+
+    arg.beginArray();
+    if (arg.atEnd()) {
+        arg.endArray();
+        setStatusMessage(QStringLiteral("No streams"));
+        Q_EMIT failed(QStringLiteral("No streams"));
+        return;
+    }
+
+    uint nodeId = 0;
+    QVariantMap streamOpts;
+    arg.beginStructure();
+    arg >> nodeId >> streamOpts;
+    arg.endStructure();
+    arg.endArray();
+
+    setStatusMessage(QStringLiteral("Got stream node ") + QString::number(nodeId));
 }
 
 

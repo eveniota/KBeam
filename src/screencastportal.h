@@ -22,13 +22,16 @@ Q_SIGNALS:
     void started(int fd, uint nodeId);
     void failed(const QString &message);
 
+private Q_SLOTS:
+    void onCreateSessionResponse(uint response, const QVariantMap &results);
+    void onSelectSourcesResponse(uint response, const QVariantMap &results);
+    void onStartResponse(uint response, const QVariantMap &results);
 private:
     void setStatusMessage(const QString &status);
     QString makeToken(const QString &prefix) const;
     void createSession();
-    void onCreateSessionResponse(uint response, const QVariantMap &results);
     void selectSources();
-    void onSelectSourcesResponse(uint response, const QVariantMap &results);
+    void startSession();
     QString m_statusMessage;
     QDBusObjectPath m_sessionPath;
 };
