@@ -15,7 +15,6 @@ class ScreencastPortal : public QObject
 public:
     explicit ScreencastPortal(QObject *parent = nullptr);
     QString statusMessage() const;
-    void start() const;
     Q_INVOKABLE void start();
 
 Q_SIGNALS:
@@ -28,6 +27,8 @@ private:
     QString makeToken(const QString &prefix) const;
     void createSession();
     void onCreateSessionResponse(uint response, const QVariantMap &results);
+    void selectSources();
+    void onSelectSourcesResponse(uint response, const QVariantMap &results);
     QString m_statusMessage;
     QDBusObjectPath m_sessionPath;
 };

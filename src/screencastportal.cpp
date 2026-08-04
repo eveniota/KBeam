@@ -89,8 +89,63 @@ void ScreencastPortal::onCreateSessionResponse(uint response, const QVariantMap 
 
     m_sessionPath = results.value(QStringLiteral("session_handle")).value<QDBusObjectPath>();
     setStatusMessage(QStringLiteral("Session ready: ") + m_sessionPath.path());
+    setStatusMessage(QStringLiteral("Selecting sources.."));
+    selectSources();
 }
 
+void ScreencastPortal::selectSources()
+{
+    if (m_sessionPath.path().isEmpty())
+    {
+        setStatusMessage(QStringLiteral("No Session"));
+        Q_EMIT failed(QStringLiteral("No Session"));
+        return;
+    }
 
+    QDBusInterface portal(
+        QStringLiteral("org.freedesktop.portal.Desktop"),
+        QStringLiteral("/org/freedesktop/portal/desktop"),
+        QStringLiteral("org.freedesktop.portal.ScreenCast"),
+        QDBusConnection::sessionBus());
+
+    const QString requestToken = makeToken(QStringLiteral("kcast_sel_"));
+
+    const QVariantMap options = {
+        {QStringLiteral("handle_token"), requestToken},
+        {QStringLiteral("types"), 1u},
+        {QStringLiteral("multiple"), false},
+        {QStringLiteral("cursor_mode"), 2u},
+    };
+
+    const QDBusReply<QDBusObjectPath> reply = portal.call(QStringLiteral("SelectSources"), QVariant::fromValue(m_sessionPath), options);
+
+    if (!reply.isValid())
+    {
+        setStatusMessage(reply.error().message());
+        Q_EMIT failed(reply.error().message());
+        return;
+    }
+
+    const QString requestPath = reply.value().path();
+    QDBusConnection::sessionBus().connect(
+           QString(),
+           requestPath,
+           QStringLiteral("org.freedesktop.portal.Request"),
+           QStringLiteral("Response"),
+           this,
+           SLOT(onSelectSourcesResponse(uint,QVariantMap)));
+}
+
+void ScreencastPortal::onSelectSourcesResponse(uint response, const QVariantMap &results)
+{
+    Q_UNUSED(response);
+    if (response != 0)
+    {
+        setStatusMessage(QStringLiteral("SelectSources cancelled or failed"));
+        Q_EMIT failed(QStringLiteral("SelectSources cancelled or failed"));
+        return;
+    }
+    setStatusMessage(QStringLiteral("Session ready"));
+}
 
 
