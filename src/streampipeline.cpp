@@ -3,14 +3,23 @@
 //
 #include "streampipeline.h"
 
-StreamPipeline::StreamPipeline(QObject *parent) : QObject(parent), m_pipeline(nullptr) {}
+#include <gst/gst.h>
 
-QString StreamPipeline::statusMessage() const{
+StreamPipeline::StreamPipeline(QObject *parent)
+    : QObject(parent)
+    , m_pipeline(nullptr)
+{
+    gst_init(nullptr, nullptr);
+}
+
+QString StreamPipeline::statusMessage() const
+{
     return m_statusMessage;
 }
 
-void StreamPipeline::setStatusMessage(const QString &statusMessage) {
-    if (statusMessage == m_statusMessage) {
+void StreamPipeline::setStatusMessage(const QString &statusMessage)
+{
+    if (m_statusMessage == statusMessage) {
         return;
     }
     m_statusMessage = statusMessage;
@@ -19,14 +28,38 @@ void StreamPipeline::setStatusMessage(const QString &statusMessage) {
 
 void StreamPipeline::start(int fd, uint nodeId)
 {
-    setStatusMessage(QStringLiteral("Pipeline ready fd=") + QString::number(fd)
-       + QStringLiteral(" node=") + QString::number(nodeId));  
+    stop();
+
+    const QString pipelineDesc =
+        QStringLiteral("pipewiresrc fd=%1 path=%2 ! videoconvert ! autovideosink")
+            .arg(fd)
+            .arg(nodeId);
+
+    GError *error = nullptr;
+    m_pipeline = gst_parse_launch(pipelineDesc.toUtf8().constData(), &error);
+    if (!m_pipeline) {
+        const QString message = error
+            ? QString::fromUtf8(error->message)
+            : QStringLiteral("gst_parse_launch failed");
+        g_clear_error(&error);
+        setStatusMessage(message);
+        return;
+    }
+
+    gst_element_set_state(m_pipeline, GST_STATE_PLAYING);
+    setStatusMessage(QStringLiteral("Playing fd=") + QString::number(fd)
+        + QStringLiteral(" node=") + QString::number(nodeId));
 }
 
 void StreamPipeline::stop()
 {
-    setStatusMessage(QStringLiteral("stop"));
+    if (!m_pipeline) {
+        setStatusMessage(QStringLiteral("Stopped"));
+        return;
+    }
+
+    gst_element_set_state(m_pipeline, GST_STATE_NULL);
+    gst_object_unref(m_pipeline);
+    m_pipeline = nullptr;
+    setStatusMessage(QStringLiteral("Stopped"));
 }
-
-
-
