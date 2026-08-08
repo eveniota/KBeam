@@ -1,6 +1,8 @@
 add_executable(kcast
         main.cpp
         peermodel.cpp
+        streampipeline.cpp
+        streampipeline.h
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
