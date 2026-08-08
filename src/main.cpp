@@ -11,6 +11,7 @@
 #include <KLocalizedContext>
 #include "p2pdiscovery.h"
 #include "screencastportal.h"
+#include "streampipeline.h"
 
 int main(int argc, char **argv)
 {
@@ -23,6 +24,9 @@ int main(int argc, char **argv)
     qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery", &discovery);
     ScreencastPortal screencast;
     qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "ScreencastPortal", &screencast);
+    StreamPipeline pipeline;
+    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "StreamPipeline", &pipeline);
+    QObject::connect(&screencast, &ScreencastPortal::started, &pipeline, &StreamPipeline::start);
     engine.loadFromModule("org.kde.kcast", "Main");
     return app.exec();
 }

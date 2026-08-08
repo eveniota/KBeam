@@ -1,8 +1,6 @@
 add_executable(kcast
         main.cpp
         peermodel.cpp
-        streampipeline.cpp
-        streampipeline.h
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -12,6 +10,7 @@ ecm_finalize_qml_module(kcast)
 target_sources(kcast PRIVATE
     p2pdiscovery.cpp
     screencastportal.cpp
+    streampipeline.cpp
 )
 
 target_link_libraries(kcast PRIVATE
@@ -25,4 +24,5 @@ target_link_libraries(kcast PRIVATE
     KF6::I18n
     KF6::CoreAddons
     KF6::NetworkManagerQt
+    PkgConfig::GSTREAMER
 )

@@ -4,25 +4,26 @@
 
 #pragma once
 #include <QObject>
+#include <QString>
 
 typedef struct _GstElement GstElement;
 
-class Streampipeline: public QObject
+class StreamPipeline: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged);
+    Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
 
 public:
-    explicit Streampipeline(QObject *parent = nullptr);
+    explicit StreamPipeline(QObject *parent = nullptr);
     QString statusMessage() const;
-    void start(int fd, uint nodeId);
-    void stop();
+    Q_INVOKABLE void start(int fd, uint nodeId);
+    Q_INVOKABLE void stop();
 
 Q_SIGNALS:
     void statusMessageChanged();
 
 private:
-    void setStatusMessage(QString message);
+    void setStatusMessage(const QString& statusMessage);
     GstElement* m_pipeline;
     QString m_statusMessage;
 };
