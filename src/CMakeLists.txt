@@ -26,4 +26,5 @@ target_link_libraries(kcast PRIVATE
     KF6::NetworkManagerQt
     PkgConfig::GSTREAMER
     KF6::ItemModels
+    PkgConfig::GSTREAMER_RTSP_SERVER
 )

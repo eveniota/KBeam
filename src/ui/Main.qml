@@ -31,7 +31,7 @@ Kirigami.ApplicationWindow {
             position: Kirigami.InlineMessage.Position.Header
         }
         KItemModels.KSortFilterProxyModel {
-            is: wfdPeerModel
+            id: wfdPeerModel
             sourceModel: P2PDiscovery.peers
             filterRoleName: "hasWfd"
             filterRowCallback: function (sourceRow, sourceParent) {
@@ -140,6 +140,17 @@ Kirigami.ApplicationWindow {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: P2PDiscovery.statusMessage
+                }
+
+                Controls.Label {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    visible: P2PDiscovery.state === P2PDiscovery.Connected
+                        && P2PDiscovery.ipv4Address.length > 0
+                    text: i18nc("@info", "P2P address: %1", P2PDiscovery.ipv4Address)
+                    opacity: 0.7
+                    font: Kirigami.Theme.smallFont
                 }
             }
         }
