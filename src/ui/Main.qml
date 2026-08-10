@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kitemmodels as KItemModels
 
 Kirigami.ApplicationWindow {
     id: app
@@ -29,12 +30,20 @@ Kirigami.ApplicationWindow {
                 : Kirigami.MessageType.Information
             position: Kirigami.InlineMessage.Position.Header
         }
-
+        KItemModels.KSortFilterProxyModel {
+            is: wfdPeerModel
+            sourceModel: P2PDiscovery.peers
+            filterRoleName: "hasWfd"
+            filterRowCallback: function (sourceRow, sourceParent) {
+                const idx = sourceModel.index(sourceRow, 0, sourceParent)
+                return sourceModel.data(idx, sourceModel.role("hasWfd")) === true;
+            }
+        }
         ListView {
             id: peerList
             clip: true
             reuseItems: true
-            model: P2PDiscovery.peers
+            model: wfdPeerModel
 
             delegate: Controls.ItemDelegate {
                 width: ListView.view.width

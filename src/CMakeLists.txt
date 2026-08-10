@@ -25,4 +25,5 @@ target_link_libraries(kcast PRIVATE
     KF6::CoreAddons
     KF6::NetworkManagerQt
     PkgConfig::GSTREAMER
+    KF6::ItemModels
 )
