@@ -129,6 +129,10 @@ void P2PDiscovery::connectToPeer(const QString& mac)
         return;
     }
     wifiP2P->setPeer(mac);
+    static const QByteArray wfdSourceIEs =
+        QByteArray::fromRawData("\x00\x00\x06\x00\x90\x1c\x44\x00\xc8", 9);
+    wifiP2P->setWfdIEs(wfdSourceIEs);
+    wifiP2P->setPeer(mac);
     wifiP2P->setInitialized(true);
     setState(Connecting);
     setStatusMessage(QStringLiteral("Connecting to ") + mac);
@@ -170,6 +174,7 @@ void P2PDiscovery::connectToPeer(const QString& mac)
                    return;
                 }
                 const QString ip = cfg.addresses().constFirst().ip().toString();
+                setIpv4Address(ip);
                 setState(Connected);
                 setStatusMessage(QStringLiteral("Connected — ") + ip);
             };
@@ -197,5 +202,21 @@ void P2PDiscovery::onPeerDisappeared(const QString &uni)
 {
     m_peers->removePeer(uni);
 }
+
+QString P2PDiscovery::ipv4Address() const
+{
+    return m_ipv4Address;
+}
+
+void P2PDiscovery::setIpv4Address(const QString &address )
+{
+    if (address == m_ipv4Address)
+    {
+        return;
+    }
+    m_ipv4Address = address;
+    Q_EMIT ipv4AddressChanged();
+}
+
 
 

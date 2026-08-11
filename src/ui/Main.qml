@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kitemmodels as KItemModels
 
 Kirigami.ApplicationWindow {
     id: app
@@ -29,12 +30,20 @@ Kirigami.ApplicationWindow {
                 : Kirigami.MessageType.Information
             position: Kirigami.InlineMessage.Position.Header
         }
-
+        KItemModels.KSortFilterProxyModel {
+            id: wfdPeerModel
+            sourceModel: P2PDiscovery.peers
+            filterRoleName: "hasWfd"
+            filterRowCallback: function (sourceRow, sourceParent) {
+                const idx = sourceModel.index(sourceRow, 0, sourceParent)
+                return sourceModel.data(idx, sourceModel.role("hasWfd")) === true;
+            }
+        }
         ListView {
             id: peerList
             clip: true
             reuseItems: true
-            model: P2PDiscovery.peers
+            model: wfdPeerModel
 
             delegate: Controls.ItemDelegate {
                 width: ListView.view.width
@@ -131,6 +140,17 @@ Kirigami.ApplicationWindow {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: P2PDiscovery.statusMessage
+                }
+
+                Controls.Label {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    visible: P2PDiscovery.state === P2PDiscovery.Connected
+                        && P2PDiscovery.ipv4Address.length > 0
+                    text: i18nc("@info", "P2P address: %1", P2PDiscovery.ipv4Address)
+                    opacity: 0.7
+                    font: Kirigami.Theme.smallFont
                 }
             }
         }

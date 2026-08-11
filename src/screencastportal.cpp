@@ -240,7 +240,6 @@ void ScreencastPortal::onStartResponse(uint response, const QVariantMap &results
     const uint nodeId = streams.constFirst().nodeId;
     setStatusMessage(QStringLiteral("Opening PipeWire remote…"));
     openPipeWireRemote(nodeId);
-    openPipeWireRemote(nodeId);
 }
 
 void ScreencastPortal::openPipeWireRemote(uint nodeId)

@@ -11,18 +11,36 @@
 #include <KLocalizedContext>
 #include "p2pdiscovery.h"
 #include "screencastportal.h"
+#include "streampipeline.h"
+#include "wfdserver.h"
 
 int main(int argc, char **argv)
-{
-    QGuiApplication app(argc, argv);
-    QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
-    P2PDiscovery discovery;
-    QQmlApplicationEngine engine;
-    KLocalizedString::setApplicationDomain("kcast");
-    engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery", &discovery);
-    ScreencastPortal screencast;
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "ScreencastPortal", &screencast);
-    engine.loadFromModule("org.kde.kcast", "Main");
-    return app.exec();
-}
+   {
+       QGuiApplication app(argc, argv);
+       QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
+       P2PDiscovery discovery;
+       QQmlApplicationEngine engine;
+       KLocalizedString::setApplicationDomain("kcast");
+       engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
+
+       qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery",
+ &discovery);
+
+       ScreencastPortal screencast;
+       qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "ScreencastPortal",
+ &screencast);
+
+       StreamPipeline pipeline;
+       qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "StreamPipeline",
+ &pipeline);
+       QObject::connect(&screencast, &ScreencastPortal::started, &pipeline,
+ &StreamPipeline::start);
+
+       WFDServer wfdServer;
+       qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "WFDServer", &wfdServer);
+       // Localhost-only smoke: no P2P needed
+       wfdServer.start(QStringLiteral("127.0.0.1"));
+
+       engine.loadFromModule("org.kde.kcast", "Main");
+       return app.exec();
+   }

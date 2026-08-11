@@ -12,6 +12,7 @@
 class P2PDiscovery : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
+    Q_PROPERTY(QString ipv4Address READ ipv4Address NOTIFY ipv4AddressChanged)
     Q_PROPERTY(PeerModel* peers READ peers CONSTANT)
 public:
     enum State
@@ -34,10 +35,11 @@ public:
     Q_INVOKABLE void startDiscovery();
     Q_INVOKABLE void stopDiscovery();
     Q_INVOKABLE void connectToPeer(const QString &mac);
+    QString ipv4Address() const;
 Q_SIGNALS:
     void statusMessageChanged();
     void stateChanged();
-
+    void ipv4AddressChanged();
 private Q_SLOTS:
     void onPeerAppeared(const QString &uni);
     void onPeerDisappeared(const QString &uni);
@@ -49,4 +51,6 @@ private:
     QString m_statusMessage;
     PeerModel* m_peers = nullptr;
     NetworkManager::WifiP2PDevice::Ptr m_device;
+    void setIpv4Address(const QString &address);
+    QString m_ipv4Address;
 };

@@ -14,7 +14,10 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 
 find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 DBus)
-find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami I18n CoreAddons NetworkManagerQt)
+find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS Kirigami I18n CoreAddons NetworkManagerQt ItemModels)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0)
+pkg_check_modules(GSTREAMER_RTSP_SERVER REQUIRED IMPORTED_TARGET gstreamer-rtsp-server-1.0)
 
 add_subdirectory(src)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

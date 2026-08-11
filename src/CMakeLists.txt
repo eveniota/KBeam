@@ -1,6 +1,8 @@
 add_executable(kcast
         main.cpp
         peermodel.cpp
+        wfd/kcastrtspclient.cpp
+        wfd/kcastrtspclient.h
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -10,6 +12,8 @@ ecm_finalize_qml_module(kcast)
 target_sources(kcast PRIVATE
     p2pdiscovery.cpp
     screencastportal.cpp
+    streampipeline.cpp
+    wfdserver.cpp
 )
 
 target_link_libraries(kcast PRIVATE
@@ -23,4 +27,7 @@ target_link_libraries(kcast PRIVATE
     KF6::I18n
     KF6::CoreAddons
     KF6::NetworkManagerQt
+    PkgConfig::GSTREAMER
+    KF6::ItemModels
+    PkgConfig::GSTREAMER_RTSP_SERVER
 )
