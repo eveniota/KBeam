@@ -6,6 +6,8 @@
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 
+#include "wfdclientsession.h"
+
 namespace
 {
     constexpr char rtspService[] = "7236";
@@ -22,10 +24,19 @@ QString WFDServer::statusMessage() const
     return m_statusMessage;
 }
 
+void WFDServer::onClientConnectedBridge(GstRTSPServer *server, GstRTSPClient *client, void *userData)
+{
+    Q_UNUSED(server);
+    auto *serverInstance = static_cast<WFDServer *>(userData);
+    serverInstance->handleClientConnected(client);
+}
+
 void  WFDServer::start(const QString &bindAddress)
 {
     stop();
     m_server = gst_rtsp_server_new();
+
+    g_signal_connect(m_server, "client-connected", G_CALLBACK(onClientConnectedBridge), this);
     gst_rtsp_server_set_service(m_server, rtspService);
     if (!bindAddress.isEmpty())
     {
@@ -54,6 +65,19 @@ void  WFDServer::start(const QString &bindAddress)
            + QLatin1String(rtspMount));
 }
 
+void WFDServer::handleClientConnected(GstRTSPClient *client)
+{
+    if (m_session)
+    {
+        delete m_session;
+    }
+    m_session = new WfdClientSession(client, this);
+    connect(m_session, &WfdClientSession::disconnected, this, [this]() {
+        setStatusMessage(QStringLiteral("Sink Disconnected"));
+    });
+    setStatusMessage(QStringLiteral("Sink Connected, negotiating WFD..."));
+}
+
 void WFDServer::stop()
 {
     if (m_attachId != 0)
@@ -65,6 +89,11 @@ void WFDServer::stop()
     {
         g_object_unref(m_server);
         m_server = nullptr;
+    }
+    if (m_session)
+    {
+        delete m_session;
+        m_session = nullptr;
     }
     setStatusMessage(QStringLiteral("WFD server stopped"));
 }

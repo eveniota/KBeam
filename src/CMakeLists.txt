@@ -1,5 +1,6 @@
 add_executable(kcast
         main.cpp
+        peermodel.cpp
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -27,6 +28,7 @@ target_link_libraries(kcast PRIVATE
     KF6::CoreAddons
     KF6::NetworkManagerQt
     PkgConfig::GSTREAMER
+    PkgConfig::GSTREAMER_RTSP
     KF6::ItemModels
     PkgConfig::GSTREAMER_RTSP_SERVER
 )

@@ -5,7 +5,7 @@
 
 #include <QObject>
 #include <QString>
-#include <glib/gtypes.h>
+#include <glib.h>
 
 typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPContext GstRTSPContext;
@@ -49,6 +49,7 @@ private:
     void handleClosed();
     void handleResponse(GstRTSPContext *ctx);
     void handleOptionsRequest(GstRTSPContext *ctx);
+    void sendM3GetParameters();
 
     GstRTSPClient *m_client = nullptr;
     State m_state = State::Init;

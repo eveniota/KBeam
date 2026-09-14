@@ -134,20 +134,20 @@ void WfdClientSession::handleOptionsRequest(GstRTSPContext *ctx)
 void WfdClientSession::onClosedBridge(GstRTSPClient *client, gpointer userData)
 {
     Q_UNUSED(client);
-    auto *self = static_cast<WfdClientSession *>(userData);
-    self->handleClosed();
+    auto *session = static_cast<WfdClientSession *>(userData);
+    session->handleClosed();
 }
 
 void WfdClientSession::onHandleResponseBridge(GstRTSPClient *client, GstRTSPContext *ctx, gpointer userData)
 {
     Q_UNUSED(client);
-    auto *self = static_cast<WfdClientSession*> (userData);
-    self->handleResponse(ctx);
+    auto *session = static_cast<WfdClientSession *>(userData);
+    session->handleResponse(ctx);
 }
 
 void WfdClientSession::onOptionsRequestBridge(GstRTSPClient *client, GstRTSPContext *ctx, gpointer userData)
 {
     Q_UNUSED(client);
-    auto *self = static_cast<WfdClientSession *>(userData);
-    self->handleOptionsRequest(ctx);
+    auto *session = static_cast<WfdClientSession *>(userData);
+    session->handleOptionsRequest(ctx);
 }

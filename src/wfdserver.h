@@ -6,7 +6,10 @@
 
 #include <QObject>
 #include <QString>
+#include <QPointer>
 
+class WfdClientSession;
+typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPServer GstRTSPServer;
 
 class WFDServer : public QObject
@@ -25,6 +28,9 @@ Q_SIGNALS:
 
 private:
     void setStatusMessage(const QString &message);
+    void handleClientConnected(GstRTSPClient *client);
+    static void onClientConnectedBridge(GstRTSPServer *server, GstRTSPClient *client, void *userData);
+    QPointer<WfdClientSession> m_session;
     QString m_statusMessage;
     GstRTSPServer *m_server = nullptr;
     unsigned int m_attachId = 0;
