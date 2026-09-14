@@ -29,7 +29,6 @@ Q_SIGNALS:
 private:
     void setStatusMessage(const QString &message);
     void handleClientConnected(GstRTSPClient *client);
-    static void onClientConnectedBridge(GstRTSPServer *server, GstRTSPClient *client, void *userData);
     QPointer<WfdClientSession> m_session;
     QString m_statusMessage;
     GstRTSPServer *m_server = nullptr;

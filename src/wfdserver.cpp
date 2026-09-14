@@ -24,19 +24,16 @@ QString WFDServer::statusMessage() const
     return m_statusMessage;
 }
 
-void WFDServer::onClientConnectedBridge(GstRTSPServer *server, GstRTSPClient *client, void *userData)
-{
-    Q_UNUSED(server);
-    auto *serverInstance = static_cast<WFDServer *>(userData);
-    serverInstance->handleClientConnected(client);
-}
-
 void  WFDServer::start(const QString &bindAddress)
 {
     stop();
     m_server = gst_rtsp_server_new();
 
-    g_signal_connect(m_server, "client-connected", G_CALLBACK(onClientConnectedBridge), this);
+    g_signal_connect(
+        m_server, "client-connected",
+        G_CALLBACK(+[](GstRTSPServer *, GstRTSPClient *client, gpointer userData) {
+            static_cast<WFDServer *>(userData)->handleClientConnected(client);
+        }), this);
     gst_rtsp_server_set_service(m_server, rtspService);
     if (!bindAddress.isEmpty())
     {

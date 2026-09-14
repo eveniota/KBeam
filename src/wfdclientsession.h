@@ -30,6 +30,7 @@ public:
     ~WfdClientSession() override;
 
     State state() const;
+    quint16 sinkRtpPort() const;
 
 Q_SIGNALS:
     void stateChanged(State state);
@@ -38,21 +39,18 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void sendM1Options();
+    void sendM3GetParameters();
 
 private:
     void setState(State state);
-
-    static void onClosedBridge(GstRTSPClient *client, gpointer userData);
-    static void onHandleResponseBridge(GstRTSPClient *client, GstRTSPContext *ctx, gpointer userData);
-    static void onOptionsRequestBridge(GstRTSPClient *client, GstRTSPContext *context, gpointer userData);
-
     void handleClosed();
     void handleResponse(GstRTSPContext *ctx);
     void handleOptionsRequest(GstRTSPContext *ctx);
-    void sendM3GetParameters();
+    void parseM3Response(const QString &body);
 
     GstRTSPClient *m_client = nullptr;
     State m_state = State::Init;
+    quint16 m_sinkRtpPort = 0;
 
     gulong m_closedHandlerId = 0;
     gulong m_responseHandlerId = 0;
