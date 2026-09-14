@@ -1,8 +1,5 @@
 add_executable(kcast
         main.cpp
-        peermodel.cpp
-        wfd/kcastrtspclient.cpp
-        wfd/kcastrtspclient.h
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -14,6 +11,8 @@ target_sources(kcast PRIVATE
     screencastportal.cpp
     streampipeline.cpp
     wfdserver.cpp
+    wfdclientsession.cpp
+    wfdclientsession.h
 )
 
 target_link_libraries(kcast PRIVATE
