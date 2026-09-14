@@ -37,14 +37,14 @@ Q_SIGNALS:
     void rtpPortNegotiated(quint16 rtpPort);
 
 public Q_SLOTS:
-    void sendM10Options();
+    void sendM1Options();
 
 private:
     void setState(State state);
 
     static void onClosedBridge(GstRTSPClient *client, gpointer userData);
     static void onHandleResponseBridge(GstRTSPClient *client, GstRTSPContext *ctx, gpointer userData);
-    static void onOptionsRequestBridge(GstRTSPClient *client, gpointer userData);
+    static void onOptionsRequestBridge(GstRTSPClient *client, GstRTSPContext *context, gpointer userData);
 
     void handleClosed();
     void handleResponse(GstRTSPContext *ctx);
