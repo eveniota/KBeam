@@ -31,6 +31,7 @@ private:
     void handleClientConnected(GstRTSPClient *client);
     QPointer<WfdClientSession> m_session;
     QString m_statusMessage;
+    QString m_bindAddress;
     GstRTSPServer *m_server = nullptr;
     unsigned int m_attachId = 0;
 };

@@ -28,6 +28,7 @@ void  WFDServer::start(const QString &bindAddress)
 {
     stop();
     m_server = gst_rtsp_server_new();
+    m_bindAddress = bindAddress;
 
     g_signal_connect(
         m_server, "client-connected",
@@ -68,10 +69,15 @@ void WFDServer::handleClientConnected(GstRTSPClient *client)
     {
         delete m_session;
     }
-    m_session = new WfdClientSession(client, this);
+    m_session = new WfdClientSession(client, m_bindAddress, this);
     connect(m_session, &WfdClientSession::disconnected, this, [this]() {
-        setStatusMessage(QStringLiteral("Sink Disconnected"));
+            setStatusMessage(QStringLiteral("Sink Disconnected"));
+        });
+
+    connect(m_session, &WfdClientSession::playRequested, this, [this]() {
+        setStatusMessage(QStringLiteral("Streaming active"));
     });
+
     setStatusMessage(QStringLiteral("Sink Connected, negotiating WFD..."));
 }
 
