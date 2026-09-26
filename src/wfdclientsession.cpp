@@ -322,5 +322,21 @@ void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
     Q_UNUSED(ctx);
     qDebug() << "KCast: Sink issued PLAY! Transitioning to Streaming state.";
     setState(State::Streaming);
-    Q_EMIT playRequested();
+
+    QString sinkIp;
+    if (m_client) {
+        GstRTSPConnection *conn = gst_rtsp_client_get_connection(m_client);
+        if (conn) {
+            const gchar *ip = gst_rtsp_connection_get_ip(conn);
+            if (ip) {
+                sinkIp = QString::fromUtf8(ip);
+            }
+        }
+    }
+    if (sinkIp.isEmpty()) {
+        sinkIp = QStringLiteral("127.0.0.1");
+    }
+
+    qDebug() << "KCast: Ready to stream RTP to sink:" << sinkIp << ":" << m_sinkRtpPort;
+    Q_EMIT playRequested(sinkIp, m_sinkRtpPort);
 }

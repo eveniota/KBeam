@@ -25,6 +25,7 @@ public:
 
 Q_SIGNALS:
     void statusMessageChanged();
+    void playRequested(const QString &sinkIp, quint16 sinkPort);
 
 private:
     void setStatusMessage(const QString &message);

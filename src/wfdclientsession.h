@@ -35,7 +35,7 @@ Q_SIGNALS:
     void stateChanged(State state);
     void disconnected();
     void rtpPortNegotiated(quint16 rtpPort);
-    void playRequested();
+    void playRequested(const QString &sinkIp, quint16 sinkPort);
 
 public Q_SLOTS:
     void sendM1Options();

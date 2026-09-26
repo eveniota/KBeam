@@ -65,17 +65,19 @@ void  WFDServer::start(const QString &bindAddress)
 
 void WFDServer::handleClientConnected(GstRTSPClient *client)
 {
-    if (m_session)
-    {
+    if (m_session) {
         delete m_session;
     }
-    m_session = new WfdClientSession(client, m_bindAddress, this);
-    connect(m_session, &WfdClientSession::disconnected, this, [this]() {
-            setStatusMessage(QStringLiteral("Sink Disconnected"));
-        });
 
-    connect(m_session, &WfdClientSession::playRequested, this, [this]() {
-        setStatusMessage(QStringLiteral("Streaming active"));
+    m_session = new WfdClientSession(client, m_bindAddress, this);
+
+    connect(m_session, &WfdClientSession::disconnected, this, [this]() {
+        setStatusMessage(QStringLiteral("Sink Disconnected"));
+    });
+
+    connect(m_session, &WfdClientSession::playRequested, this, [this](const QString &sinkIp, quint16 sinkPort) {
+        setStatusMessage(QStringLiteral("Streaming active to %1:%2").arg(sinkIp).arg(sinkPort));
+        Q_EMIT playRequested(sinkIp, sinkPort);
     });
 
     setStatusMessage(QStringLiteral("Sink Connected, negotiating WFD..."));
@@ -103,8 +105,7 @@ void WFDServer::stop()
 
 void WFDServer::setStatusMessage(const QString &statusMessage)
 {
-    if (statusMessage == m_statusMessage)
-    {
+    if (statusMessage == m_statusMessage) {
         return;
     }
     m_statusMessage = statusMessage;
