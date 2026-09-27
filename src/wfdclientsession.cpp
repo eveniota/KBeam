@@ -24,7 +24,7 @@ namespace
         "wfd_client_rtp_ports\r\n";
 
     constexpr char DefaultH264Descriptor[] =
-        "00 00 01 01 00000080 00000000 00000000 00 0000 0000 00 none none";
+        "01 01 00000081 00000000 00000000 00 0000 0000 00 none none";
 }
 
 WfdClientSession::WfdClientSession(GstRTSPClient *client, const QString &serverAddress, QObject *parent)
@@ -294,7 +294,7 @@ void WfdClientSession::parseM3Response(const QString &body)
             const auto tokens = trimmed.split(QLatin1Char(' '), Qt::SkipEmptyParts);
             if (tokens.size() >= 3) {
                 bool ok = false;
-                const quint16 port = tokens.at(2).toUShort(&ok);
+                const quint16 port = tokens.at(1).toUShort(&ok);
                 if (ok && port > 0) {
                     m_sinkRtpPort = port;
                     qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort;

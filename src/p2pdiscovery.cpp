@@ -10,8 +10,11 @@
 #include <NetworkManagerQt/IpConfig>
 #include <NetworkManagerQt/ConnectionSettings>
 #include <NetworkManagerQt/Device>
+#include <QDBusInterface>
+#include <QDBusObjectPath>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
+#include <QDBusReply>
 #include <QDebug>
 #include <QUuid>
 #include "peermodel.h"
@@ -178,6 +181,14 @@ void P2PDiscovery::connectToPeer(const QString &mac)
     settings.setId(QStringLiteral("KBeam-") + (peerMac.isEmpty() ? QStringLiteral("Peer") : peerMac));
     settings.setUuid(QUuid::createUuid().toString(QUuid::WithoutBraces));
     settings.setAutoconnect(false);
+    settings.setZone(QStringLiteral("P2P-WiFi-Display"));
+
+    QString firewallError;
+    if (!ensureFirewallZone(&firewallError)) {
+        setState(Error);
+        setStatusMessage(firewallError);
+        return;
+    }
 
     auto wifiP2P = settings.setting(NetworkManager::Setting::WifiP2P).staticCast<NetworkManager::WifiP2PSetting>();
     if (!wifiP2P) {
@@ -275,6 +286,64 @@ void P2PDiscovery::connectToPeer(const QString &mac)
     });
 }
 
+bool P2PDiscovery::ensureFirewallZone(QString *errorMessage) const
+{
+    static const QString serviceName = QStringLiteral("org.fedoraproject.FirewallD1");
+    static const QString objectPath = QStringLiteral("/org/fedoraproject/FirewallD1");
+    static const QString zoneInterface = QStringLiteral("org.fedoraproject.FirewallD1.zone");
+    static const QString configInterface = QStringLiteral("org.fedoraproject.FirewallD1.config");
+    static const QString zoneName = QStringLiteral("P2P-WiFi-Display");
+
+    QDBusInterface firewall(serviceName, objectPath, serviceName, QDBusConnection::systemBus());
+    if (!firewall.isValid()) {
+        if (firewall.lastError().name() == QLatin1String("org.freedesktop.DBus.Error.ServiceUnknown")) {
+            return true;
+        }
+        if (errorMessage) {
+            *errorMessage = firewall.lastError().message();
+        }
+        return false;
+    }
+
+    QDBusInterface config(serviceName, objectPath, configInterface, QDBusConnection::systemBus());
+    QDBusReply<QDBusObjectPath> zoneReply = config.call(QStringLiteral("getZoneByName"), zoneName);
+    if (!zoneReply.isValid()) {
+        if (zoneReply.error().name() != QLatin1String("org.fedoraproject.FirewallD1.Exception.NOT_FOUND")) {
+            if (errorMessage) {
+                *errorMessage = zoneReply.error().message();
+            }
+            return false;
+        }
+
+        zoneReply = config.call(QStringLiteral("addZone"), zoneName, QVariantMap{});
+        if (!zoneReply.isValid()) {
+            if (errorMessage) {
+                *errorMessage = zoneReply.error().message();
+            }
+            return false;
+        }
+    }
+
+    QDBusInterface zone(serviceName, zoneReply.value().path(), zoneInterface, QDBusConnection::systemBus());
+    if (!zone.isValid()) {
+        if (errorMessage) {
+            *errorMessage = zone.lastError().message();
+        }
+        return false;
+    }
+
+    const QDBusReply<void> portReply = zone.call(QStringLiteral("addPort"), QStringLiteral("7236"), QStringLiteral("tcp"));
+    if (!portReply.isValid()
+        && portReply.error().name() != QLatin1String("org.fedoraproject.FirewallD1.Exception.ALREADY_ENABLED")) {
+        if (errorMessage) {
+            *errorMessage = portReply.error().message();
+        }
+        return false;
+    }
+
+    return true;
+}
+
 void P2PDiscovery::setState(State state)
 {
     if (m_state == state)
@@ -305,6 +374,4 @@ void P2PDiscovery::setIpv4Address(const QString &address )
     m_ipv4Address = address;
     Q_EMIT ipv4AddressChanged();
 }
-
-
 
