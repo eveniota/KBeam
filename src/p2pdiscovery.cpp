@@ -166,17 +166,23 @@ void P2PDiscovery::connectToPeer(const QString& mac)
                 return;
             }
             auto reportIp = [this, active]() {
-                if (!active || active->state() != NetworkManager::ActiveConnection::Activated) {
+                if (!active ) {
                    return;
                 }
-                const NetworkManager::IpConfig cfg = active->ipV4Config();
-                if (!cfg.isValid() || cfg.addresses().isEmpty()) {
-                   return;
+                if (active->state() == NetworkManager::ActiveConnection::Activated) {
+                    const NetworkManager::IpConfig cfg = active->ipV4Config();
+                    if (!cfg.isValid() || cfg.addresses().isEmpty()) {
+                        return;
+                    }
+                    const QString ip = cfg.addresses().constFirst().ip().toString();
+                    setIpv4Address(ip);
+                    setState(Connected);
+                    setStatusMessage(QStringLiteral("Connected — ") + ip);
+                } else if (active->state() == NetworkManager::ActiveConnection::Deactivated) {
+                    setIpv4Address(QString());
+                    setState(Idle);
+                    setStatusMessage(QStringLiteral("Disconnected"));
                 }
-                const QString ip = cfg.addresses().constFirst().ip().toString();
-                setIpv4Address(ip);
-                setState(Connected);
-                setStatusMessage(QStringLiteral("Connected — ") + ip);
             };
 
             connect(active.data(), &NetworkManager::ActiveConnection::stateChanged, this, reportIp);
