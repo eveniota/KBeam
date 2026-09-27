@@ -1,12 +1,12 @@
-add_executable(kcast
+add_executable(kbeam
         main.cpp
 )
 
-ecm_add_qml_module(kcast URI org.kde.kcast)
-ecm_target_qml_sources(kcast SOURCES ui/Main.qml)
-ecm_finalize_qml_module(kcast)
+ecm_add_qml_module(kbeam URI org.kde.kbeam)
+ecm_target_qml_sources(kbeam SOURCES ui/Main.qml)
+ecm_finalize_qml_module(kbeam)
 
-target_sources(kcast PRIVATE
+target_sources(kbeam PRIVATE
     p2pdiscovery.cpp
     screencastportal.cpp
     streampipeline.cpp
@@ -16,7 +16,7 @@ target_sources(kcast PRIVATE
     peermodel.cpp
 )
 
-target_link_libraries(kcast PRIVATE
+target_link_libraries(kbeam PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml

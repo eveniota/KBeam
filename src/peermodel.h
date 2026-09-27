@@ -33,9 +33,12 @@ public:
     int rowCount(const QModelIndex &parent) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
+    Q_INVOKABLE int role(const QByteArray &roleName) const;
     void clear();
     void addPeer(const PeerInfo &info);
     void removePeer(const QString &uni);
+    QString peerUni(const QString &mac) const;
+    QString peerMac(const QString &uni) const;
 
 private:
     QList<PeerInfo> m_peers;

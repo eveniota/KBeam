@@ -12,11 +12,11 @@ Kirigami.ApplicationWindow {
     width: Kirigami.Units.gridUnit * 55
     height: Kirigami.Units.gridUnit * 39
 
-    title: i18nc("@title:window", "KCast")
+    title: i18nc("@title:window", "KBeam")
 
     pageStack.initialPage: Kirigami.ScrollablePage {
         id: findPage
-        title: i18nc("@title", "KCast")
+        title: i18nc("@title", "KBeam")
 
         readonly property string bannerText: ScreencastPortal.statusMessage.length > 0
             ? ScreencastPortal.statusMessage
@@ -36,7 +36,7 @@ Kirigami.ApplicationWindow {
             filterRoleName: "hasWfd"
             filterRowCallback: function (sourceRow, sourceParent) {
                 const idx = sourceModel.index(sourceRow, 0, sourceParent)
-                return sourceModel.data(idx, sourceModel.role("hasWfd")) === true;
+                return sourceModel.data(idx, 260) === true;
             }
         }
         ListView {
@@ -47,7 +47,7 @@ Kirigami.ApplicationWindow {
 
             delegate: Controls.ItemDelegate {
                 width: ListView.view.width
-                onClicked: P2PDiscovery.connectToPeer(model.mac)
+                onClicked: P2PDiscovery.connectToPeer(model.uni)
 
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.smallSpacing

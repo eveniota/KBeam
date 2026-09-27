@@ -46,6 +46,7 @@ private Q_SLOTS:
 
 private:
     void setState(State state);
+    void findDevice();
     State m_state = Idle;
     void setStatusMessage(const QString &status);
     QString m_statusMessage;

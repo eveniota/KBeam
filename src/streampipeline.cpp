@@ -46,7 +46,7 @@ void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, 
             "! videoconvert "
             "! videorate "
             "! video/x-raw,format=I420 "
-            "! intervideosink channel=kcast-desktop")
+            "! intervideosink channel=kbeam-desktop")
             .arg(fd)
             .arg(nodeId);
 
@@ -63,7 +63,7 @@ void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, 
 
     const GstStateChangeReturn ret = gst_element_set_state(m_pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        qWarning() << "KCast: Failed to set capture pipeline to PLAYING";
+        qWarning() << "KBeam: Failed to set capture pipeline to PLAYING";
         setStatusMessage(QStringLiteral("Failed to start capture pipeline"));
         return;
     }

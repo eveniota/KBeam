@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(kcast VERSION 0.1 LANGUAGES CXX)
+project(kbeam VERSION 0.1 LANGUAGES CXX)
 
 set(QT_MIN_VERSION "6.5.0")
 set(KF6_MIN_VERSION "6.0.0")

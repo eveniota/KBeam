@@ -57,7 +57,7 @@ WfdClientSession::WfdClientSession(GstRTSPClient *client, const QString &serverA
             static_cast<WfdClientSession *>(userData)->handlePlayRequest(ctx);
         }), this);
 
-    qDebug() << "KCast: RTSP sink connected. Waiting" << SettleTimeoutMs << "ms before M1...";
+    qDebug() << "KBeam: RTSP sink connected. Waiting" << SettleTimeoutMs << "ms before M1...";
     QTimer::singleShot(SettleTimeoutMs, this, &WfdClientSession::sendM1Options);
 }
 
@@ -113,7 +113,7 @@ void WfdClientSession::sendM1Options()
         return;
     }
 
-    qDebug() << "KCast: Sending WFD M1 Options query..";
+    qDebug() << "KBeam: Sending WFD M1 Options query..";
 
     GstRTSPMessage msg;
     memset(&msg, 0, sizeof(msg));
@@ -127,10 +127,10 @@ void WfdClientSession::sendM1Options()
     if (result == GST_RTSP_OK)
     {
         setState(State::M1Sent);
-        qDebug() << "KCast: M1 options query successfully transmitted";
+        qDebug() << "KBeam: M1 options query successfully transmitted";
     } else
     {
-        qWarning() << "KCast: M1 options query failed" << result;
+        qWarning() << "KBeam: M1 options query failed" << result;
     }
 }
 
@@ -140,7 +140,7 @@ void WfdClientSession::sendM3GetParameters()
         return;
     }
 
-    qDebug() << "KCast: Sending WFD M3 GET_PARAMETER query...";
+    qDebug() << "KBeam: Sending WFD M3 GET_PARAMETER query...";
 
     GstRTSPMessage msg;
     memset(&msg, 0, sizeof(msg));
@@ -155,9 +155,9 @@ strlen(M3RequestBody));
 
     if (result == GST_RTSP_OK) {
         setState(State::M3Sent);
-        qDebug() << "KCast: M3 GET_PARAMETER transmitted.";
+        qDebug() << "KBeam: M3 GET_PARAMETER transmitted.";
     } else {
-        qWarning() << "KCast: Failed to send M3 GET_PARAMETER, error:" << result;
+        qWarning() << "KBeam: Failed to send M3 GET_PARAMETER, error:" << result;
     }
 }
 
@@ -167,7 +167,7 @@ void WfdClientSession::sendM4SetParameter()
         return;
     }
 
-    qDebug() << "KCast: Sending WFD M4 SET_PARAMETER...";
+    qDebug() << "KBeam: Sending WFD M4 SET_PARAMETER...";
 
     const QString presentationUrl = QStringLiteral("rtsp://%1:7236/wfd1.0/streamid=0 none").
 arg(m_serverAddress);
@@ -196,9 +196,9 @@ arg(m_serverAddress);
 
     if (result == GST_RTSP_OK) {
         setState(State::M4Sent);
-        qDebug() << "KCast: M4 SET_PARAMETER transmitted.";
+        qDebug() << "KBeam: M4 SET_PARAMETER transmitted.";
     } else {
-        qWarning() << "KCast: Failed to send M4 SET_PARAMETER, error:" << result;
+        qWarning() << "KBeam: Failed to send M4 SET_PARAMETER, error:" << result;
     }
 }
 
@@ -208,7 +208,7 @@ void WfdClientSession::sendM5TriggerSetup()
         return;
     }
 
-    qDebug() << "KCast: Sending WFD M5 trigger SETUP...";
+    qDebug() << "KBeam: Sending WFD M5 trigger SETUP...";
 
     constexpr char M5Body[] = "wfd_trigger_method: SETUP\r\n";
 
@@ -224,16 +224,16 @@ void WfdClientSession::sendM5TriggerSetup()
 
     if (result == GST_RTSP_OK) {
         setState(State::M5Sent);
-        qDebug() << "KCast: M5 trigger SETUP transmitted.";
+        qDebug() << "KBeam: M5 trigger SETUP transmitted.";
     } else {
-        qWarning() << "KCast: Failed to send M5 trigger SETUP, error:" << result;
+        qWarning() << "KBeam: Failed to send M5 trigger SETUP, error:" << result;
     }
 }
 
 
 void WfdClientSession::handleClosed()
 {
-    qDebug() << "KCast: Client closed RTSP connection.";
+    qDebug() << "KBeam: Client closed RTSP connection.";
     Q_EMIT disconnected();
 }
 
@@ -247,16 +247,16 @@ void WfdClientSession::handleResponse(GstRTSPContext *ctx)
     GstRTSPStatusCode statusCode = GST_RTSP_STS_INVALID;
     gst_rtsp_message_parse_response(ctx->response, &statusCode, nullptr, nullptr);
 
-    qDebug() << "KCast: Received RTSP response with status code:" << statusCode << "in state:" << static_cast<int>(m_state);
+    qDebug() << "KBeam: Received RTSP response with status code:" << statusCode << "in state:" << static_cast<int>(m_state);
     if (statusCode != GST_RTSP_STS_OK)
     {
-        qWarning() << "KCast: Sink Replied with non-200 status code:" << statusCode;
+        qWarning() << "KBeam: Sink Replied with non-200 status code:" << statusCode;
         return;
     }
 
     if (m_state == State::M1Sent)
     {
-        qDebug() << "KCast: Sink accepted M1. Advancing to M3 GET_PARAMETER...";
+        qDebug() << "KBeam: Sink accepted M1. Advancing to M3 GET_PARAMETER...";
         sendM3GetParameters();
     } else if (m_state == State::M3Sent)
     {
@@ -270,21 +270,21 @@ void WfdClientSession::handleResponse(GstRTSPContext *ctx)
             parseM3Response(body);
         } else
         {
-            qWarning() << "KCast: Received empty body in M3 Response";
+            qWarning() << "KBeam: Received empty body in M3 Response";
         }
     } else if (m_state == State::M4Sent)
     {
-        qDebug() << "KCast: Sink accepted M4 parameters! Sending M5 trigger SETUP...";
+        qDebug() << "KBeam: Sink accepted M4 parameters! Sending M5 trigger SETUP...";
         sendM5TriggerSetup();
     } else if (m_state == State::M5Sent)
     {
-        qDebug() << "KCast: Sink acknowledged M5! Waiting for sink RTSP SETUP and PLAY...";
+        qDebug() << "KBeam: Sink acknowledged M5! Waiting for sink RTSP SETUP and PLAY...";
     }
 }
 
 void WfdClientSession::parseM3Response(const QString &body)
 {
-    qDebug() << "KCast: Parsing M3 response body:\n" << body;
+    qDebug() << "KBeam: Parsing M3 response body:\n" << body;
 
     const auto lines = QStringView(body).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (const auto &line : lines) {
@@ -297,7 +297,7 @@ void WfdClientSession::parseM3Response(const QString &body)
                 const quint16 port = tokens.at(2).toUShort(&ok);
                 if (ok && port > 0) {
                     m_sinkRtpPort = port;
-                    qDebug() << "KCast: Successfully negotiated sink RTP port:" << m_sinkRtpPort;
+                    qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort;
                     Q_EMIT rtpPortNegotiated(m_sinkRtpPort);
 
                     sendM4SetParameter();
@@ -314,13 +314,13 @@ void WfdClientSession::handleOptionsRequest(GstRTSPContext *ctx)
     }
 
     gst_rtsp_message_add_header(ctx->response, GST_RTSP_HDR_PUBLIC, WfdPublicHeader);
-    qDebug() << "KCast: Handled M2 Options request, added Public:" << WfdPublicHeader;
+    qDebug() << "KBeam: Handled M2 Options request, added Public:" << WfdPublicHeader;
 }
 
 void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
 {
     Q_UNUSED(ctx);
-    qDebug() << "KCast: Sink issued PLAY! Transitioning to Streaming state.";
+    qDebug() << "KBeam: Sink issued PLAY! Transitioning to Streaming state.";
     setState(State::Streaming);
 
     QString sinkIp;
@@ -337,6 +337,6 @@ void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
         sinkIp = QStringLiteral("127.0.0.1");
     }
 
-    qDebug() << "KCast: Ready to stream RTP to sink:" << sinkIp << ":" << m_sinkRtpPort;
+    qDebug() << "KBeam: Ready to stream RTP to sink:" << sinkIp << ":" << m_sinkRtpPort;
     Q_EMIT playRequested(sinkIp, m_sinkRtpPort);
 }

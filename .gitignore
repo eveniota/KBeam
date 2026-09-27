@@ -1,5 +1,8 @@
 /build/
+/build-debian/
+/bin
 /cmake-build-*/
 /.idea/
 /notes/
 *.user
+

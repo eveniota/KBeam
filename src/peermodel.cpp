@@ -42,6 +42,11 @@ QHash<int, QByteArray> PeerModel::roleNames() const
     };
 }
 
+int PeerModel::role(const QByteArray &roleName) const
+{
+    return roleNames().key(roleName, -1);
+}
+
 void PeerModel::clear()
 {
     beginResetModel();
@@ -69,4 +74,24 @@ void PeerModel::removePeer(const QString &uni)
             break;
         }
     }
+}
+
+QString PeerModel::peerUni(const QString &mac) const
+{
+    for (const auto &peer : m_peers) {
+        if (peer.mac.compare(mac, Qt::CaseInsensitive) == 0) {
+            return peer.uni;
+        }
+    }
+    return {};
+}
+
+QString PeerModel::peerMac(const QString &uni) const
+{
+    for (const auto &peer : m_peers) {
+        if (peer.uni == uni) {
+            return peer.mac;
+        }
+    }
+    return {};
 }

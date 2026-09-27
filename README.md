@@ -1,4 +1,4 @@
-# KCast
+# KBeam
 
 
 
@@ -15,14 +15,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://invent.kde.org/mradul/kcast.git
+git remote add origin https://invent.kde.org/mradul/kbeam.git
 git branch -M master
 git push -uf origin master
 ```
 
 ## Integrate with your tools
 
-* [Set up project integrations](https://invent.kde.org/mradul/kcast/-/settings/integrations)
+* [Set up project integrations](https://invent.kde.org/mradul/kbeam/-/settings/integrations)
 
 ## Collaborate with your team
 

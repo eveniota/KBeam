@@ -69,8 +69,8 @@ void ScreencastPortal::createSession() {
         QStringLiteral("org.freedesktop.portal.ScreenCast"),
         QDBusConnection::sessionBus());
 
-    const QString requestToken = makeToken(QStringLiteral("kcast_req_"));
-    const QString sessionToken = makeToken(QStringLiteral("kcast_sess_"));
+    const QString requestToken = makeToken(QStringLiteral("kbeam_req_"));
+    const QString sessionToken = makeToken(QStringLiteral("kbeam_sess_"));
 
     const QVariantMap options = {
         {QStringLiteral("handle_token"), requestToken},
@@ -139,7 +139,7 @@ void ScreencastPortal::selectSources()
         QStringLiteral("org.freedesktop.portal.ScreenCast"),
         QDBusConnection::sessionBus());
 
-    const QString requestToken = makeToken(QStringLiteral("kcast_sel_"));
+    const QString requestToken = makeToken(QStringLiteral("kbeam_sel_"));
 
     const QVariantMap options = {
         {QStringLiteral("handle_token"), requestToken},
@@ -194,7 +194,7 @@ void ScreencastPortal::startSession()
         QStringLiteral("org.freedesktop.portal.ScreenCast"),
         QDBusConnection::sessionBus());
 
-    const QString requestToken = makeToken(QStringLiteral("kcast_start_"));
+    const QString requestToken = makeToken(QStringLiteral("kbeam_start_"));
     const QVariantMap options = {
         {QStringLiteral("handle_token"), requestToken},
     };

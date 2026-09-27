@@ -46,7 +46,7 @@ void  WFDServer::start(const QString &bindAddress)
 
     gst_rtsp_media_factory_set_launch(
                 factory,
-                "( intervideosrc channel=kcast-desktop "
+                "( intervideosrc channel=kbeam-desktop "
                 "! videoconvert "
                 "! video/x-raw,format=I420 "
                 "! x264enc tune=zerolatency speed-preset=ultrafast key-int-max=30 "

@@ -21,19 +21,19 @@ int main(int argc, char **argv)
 
     P2PDiscovery discovery;
     QQmlApplicationEngine engine;
-    KLocalizedString::setApplicationDomain("kcast");
+    KLocalizedString::setApplicationDomain("kbeam");
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
 
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "P2PDiscovery", &discovery);
+    qmlRegisterSingletonInstance("org.kde.kbeam", 1, 0, "P2PDiscovery", &discovery);
 
     ScreencastPortal screencast;
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "ScreencastPortal", &screencast);
+    qmlRegisterSingletonInstance("org.kde.kbeam", 1, 0, "ScreencastPortal", &screencast);
 
     StreamPipeline pipeline;
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "StreamPipeline", &pipeline);
+    qmlRegisterSingletonInstance("org.kde.kbeam", 1, 0, "StreamPipeline", &pipeline);
 
     WFDServer wfdServer;
-    qmlRegisterSingletonInstance("org.kde.kcast", 1, 0, "WFDServer", &wfdServer);
+    qmlRegisterSingletonInstance("org.kde.kbeam", 1, 0, "WFDServer", &wfdServer);
 
     // Track state between portal capture (fd, nodeId) and RTSP negotiation (sinkIp, sinkPort)
     struct StreamingState {
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         [&pipeline, &session](int fd, uint nodeId) {
             session.fd = fd;
             session.nodeId = nodeId;
-            qDebug() << "KCast: Screen selected (fd=" << fd << ", node=" << nodeId << "). Startingdesktop capture pipeline...";
+            qDebug() << "KBeam: Screen selected (fd=" << fd << ", node=" << nodeId << "). Startingdesktop capture pipeline...";
             pipeline.start(fd, nodeId);
         });
 
@@ -69,10 +69,10 @@ int main(int argc, char **argv)
         [&discovery, &wfdServer, &pipeline, &session]() {
             const QString ip = discovery.ipv4Address();
             if (!ip.isEmpty()) {
-                qDebug() << "KCast: Binding WFD RTSP server to P2P IP:" << ip;
+                qDebug() << "KBeam: Binding WFD RTSP server to P2P IP:" << ip;
                 wfdServer.start(ip);
             } else {
-                qDebug() << "KCast: P2P disconnected, stopping server and pipeline.";
+                qDebug() << "KBeam: P2P disconnected, stopping server and pipeline.";
                 pipeline.stop();
                 wfdServer.stop();
                 session.fd = -1;
@@ -83,6 +83,6 @@ int main(int argc, char **argv)
     // Fallback: start on localhost for local testing (ffplay / VLC)
     wfdServer.start(QStringLiteral("0.0.0.0"));
 
-    engine.loadFromModule("org.kde.kcast", "Main");
+    engine.loadFromModule("org.kde.kbeam", "Main");
     return app.exec();
 }
