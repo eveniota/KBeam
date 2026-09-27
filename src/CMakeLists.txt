@@ -1,6 +1,5 @@
 add_executable(kcast
         main.cpp
-        peermodel.cpp
 )
 
 ecm_add_qml_module(kcast URI org.kde.kcast)
@@ -14,6 +13,7 @@ target_sources(kcast PRIVATE
     wfdserver.cpp
     wfdclientsession.cpp
     wfdclientsession.h
+    peermodel.cpp
 )
 
 target_link_libraries(kcast PRIVATE

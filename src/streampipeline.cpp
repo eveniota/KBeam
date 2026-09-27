@@ -4,6 +4,7 @@
 
 #include "streampipeline.h"
 
+#include <QDebug>
 #include <gst/gst.h>
 
 namespace
@@ -35,25 +36,19 @@ void StreamPipeline::setStatusMessage(const QString &statusMessage)
 
 void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, quint16 destinationPort)
 {
+    Q_UNUSED(destinationHost);
+    Q_UNUSED(destinationPort);
     stop();
-
-    const QString targetHost = destinationHost.isEmpty() ? QLatin1String(DefaultHost) : destinationHost;
-    const quint16 targetPort = destinationPort == 0 ? DefaultPort : destinationPort;
 
     const QString pipelineDesc =
         QStringLiteral(
-            "pipewiresrc fd=%1 path=%2 do-timestamp=true "
+            "pipewiresrc fd=%1 path=%2 do-timestamp=true keepalive-time=1000 "
             "! videoconvert "
+            "! videorate "
             "! video/x-raw,format=I420 "
-            "! x264enc tune=zerolatency speed-preset=ultrafast key-int-max=30 "
-            "! video/x-h264,stream-format=byte-stream "
-            "! mpegtsmux alignment=7 "
-            "! rtpmp2tpay "
-            "! udpsink host=%3 port=%4")
+            "! intervideosink channel=kcast-desktop")
             .arg(fd)
-            .arg(nodeId)
-            .arg(targetHost)
-            .arg(targetPort);
+            .arg(nodeId);
 
     GError *error = nullptr;
     m_pipeline = gst_parse_launch(pipelineDesc.toUtf8().constData(), &error);
@@ -66,12 +61,13 @@ void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, 
         return;
     }
 
-    gst_element_set_state(m_pipeline, GST_STATE_PLAYING);
-    setStatusMessage(QStringLiteral("Streaming RTP to %1:%2 (fd=%3, node=%4)")
-        .arg(targetHost)
-        .arg(targetPort)
-        .arg(fd)
-        .arg(nodeId));
+    const GstStateChangeReturn ret = gst_element_set_state(m_pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        qWarning() << "KCast: Failed to set capture pipeline to PLAYING";
+        setStatusMessage(QStringLiteral("Failed to start capture pipeline"));
+        return;
+    }
+    setStatusMessage(QStringLiteral("Desktop capture active (fd=%1, node=%2)").arg(fd).arg(nodeId));
 }
 
 void StreamPipeline::stop()

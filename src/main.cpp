@@ -43,33 +43,24 @@ int main(int argc, char **argv)
         quint16 sinkPort = 0;
     } session;
 
-    auto tryStartPipeline = [&pipeline, &session]() {
-        if (session.fd >= 0 && session.sinkPort > 0) {
-            const QString targetHost = session.sinkIp.isEmpty() ? QStringLiteral("127.0.0.1") : session.sinkIp;
-            qDebug() << "KCast: Starting stream pipeline to" << targetHost << ":" << session.sinkPort;
-            pipeline.start(session.fd, session.nodeId, targetHost, session.sinkPort);
-        }
-    };
-
     // When ScreencastPortal yields PipeWire fd and nodeId:
     QObject::connect(&screencast, &ScreencastPortal::started,
-        [&session, tryStartPipeline](int fd, uint nodeId) {
+        [&pipeline, &session](int fd, uint nodeId) {
             session.fd = fd;
             session.nodeId = nodeId;
-            tryStartPipeline();
+            qDebug() << "KCast: Screen selected (fd=" << fd << ", node=" << nodeId << "). Startingdesktop capture pipeline...";
+            pipeline.start(fd, nodeId);
         });
 
     // When sink sends RTSP PLAY:
     QObject::connect(&wfdServer, &WFDServer::playRequested,
-        [&session, &screencast, tryStartPipeline](const QString &sinkIp, quint16 sinkPort) {
+        [&session, &screencast](const QString &sinkIp, quint16 sinkPort) {
             session.sinkIp = sinkIp;
             session.sinkPort = sinkPort;
 
             // If user hasn't selected a screen yet, prompt portal now
             if (session.fd < 0) {
                 screencast.start();
-            } else {
-                tryStartPipeline();
             }
         });
 
@@ -90,7 +81,7 @@ int main(int argc, char **argv)
         });
 
     // Fallback: start on localhost for local testing (ffplay / VLC)
-    wfdServer.start(QStringLiteral("127.0.0.1"));
+    wfdServer.start(QStringLiteral("0.0.0.0"));
 
     engine.loadFromModule("org.kde.kcast", "Main");
     return app.exec();

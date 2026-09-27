@@ -44,7 +44,18 @@ void  WFDServer::start(const QString &bindAddress)
     GstRTSPMountPoints *mounts = gst_rtsp_server_get_mount_points(m_server);
     GstRTSPMediaFactory *factory = gst_rtsp_media_factory_new();
 
-    gst_rtsp_media_factory_set_launch(factory, "( videotestsrc is-live=true ! x264enc ! rtph264pay name=pay0 pt=96 )");
+    gst_rtsp_media_factory_set_launch(
+                factory,
+                "( intervideosrc channel=kcast-desktop "
+                "! videoconvert "
+                "! video/x-raw,format=I420 "
+                "! x264enc tune=zerolatency speed-preset=ultrafast key-int-max=30 "
+                "! video/x-h264,profile=baseline,stream-format=byte-stream "
+                "! mpegtsmux alignment=7 "
+                "! rtpmp2tpay name=pay0 pt=33 )");
+
+    gst_rtsp_media_factory_set_shared(factory, TRUE);
+
     gst_rtsp_mount_points_add_factory(mounts, rtspMount, factory);
     g_object_unref(mounts);
 
