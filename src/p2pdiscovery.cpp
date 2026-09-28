@@ -85,6 +85,16 @@ QString P2PDiscovery::statusMessage() const
     return m_statusMessage;
 }
 
+QString P2PDiscovery::activePeerMac() const
+{
+    return m_activePeerMac;
+}
+
+QString P2PDiscovery::activePeerName() const
+{
+    return m_activePeerName;
+}
+
 void P2PDiscovery::setStatusMessage(const QString &status)
 {
     if (status == m_statusMessage) {
@@ -103,7 +113,10 @@ void P2PDiscovery::startDiscovery()
         setStatusMessage(QStringLiteral("No wifi-p2p device found"));
         return;
     }
+    m_device->stopFind();
     m_peers->clear();
+    setState(Discovering);
+    setStatusMessage(QStringLiteral("Discovering..."));
     auto *watcher = new QDBusPendingCallWatcher(m_device->startFind(), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, [this, watcher](QDBusPendingCallWatcher *)
     {
@@ -217,8 +230,18 @@ void P2PDiscovery::connectToPeer(const QString &mac)
         ipv6->setMayFail(true);
     }
 
+    m_activePeerMac = peerMac;
+    m_activePeerName = m_peers->peerName(peerMac);
+    if (m_activePeerName.isEmpty() && m_device) {
+        const auto p = m_device->findPeer(peerUni);
+        if (p) {
+            m_activePeerName = p->name();
+        }
+    }
+    Q_EMIT activePeerChanged();
+
     setState(Connecting);
-    setStatusMessage(QStringLiteral("Connecting to ") + (peerMac.isEmpty() ? peerUni : peerMac));
+    setStatusMessage(QStringLiteral("Connecting to ") + (m_activePeerName.isEmpty() ? (peerMac.isEmpty() ? peerUni : peerMac) : m_activePeerName));
 
     QVariantMap options;
     options[QStringLiteral("persist")] = QStringLiteral("volatile");
@@ -238,6 +261,9 @@ void P2PDiscovery::connectToPeer(const QString &mac)
         if (reply.isError()) {
             setState(Error);
             setStatusMessage(reply.error().message());
+            m_activePeerMac.clear();
+            m_activePeerName.clear();
+            Q_EMIT activePeerChanged();
             watcher->deleteLater();
             return;
         }
@@ -247,9 +273,14 @@ void P2PDiscovery::connectToPeer(const QString &mac)
         if (!active) {
             setState(Error);
             setStatusMessage(QStringLiteral("No active connection found"));
+            m_activePeerMac.clear();
+            m_activePeerName.clear();
+            Q_EMIT activePeerChanged();
             watcher->deleteLater();
             return;
         }
+
+        m_activeConnection = active;
 
         auto reportIp = [this, active]() {
             if (!active) {
@@ -267,6 +298,10 @@ void P2PDiscovery::connectToPeer(const QString &mac)
                 setState(Connected);
                 setStatusMessage(QStringLiteral("Connected — ") + ip);
             } else if (active->state() == NetworkManager::ActiveConnection::Deactivated) {
+                m_activeConnection.clear();
+                m_activePeerMac.clear();
+                m_activePeerName.clear();
+                Q_EMIT activePeerChanged();
                 setIpv4Address(QString());
                 if (m_state == Connecting) {
                     setState(Error);
@@ -284,6 +319,20 @@ void P2PDiscovery::connectToPeer(const QString &mac)
 
         watcher->deleteLater();
     });
+}
+
+void P2PDiscovery::disconnectPeer()
+{
+    if (m_activeConnection) {
+        NetworkManager::deactivateConnection(m_activeConnection->path());
+        m_activeConnection.clear();
+    }
+    m_activePeerMac.clear();
+    m_activePeerName.clear();
+    Q_EMIT activePeerChanged();
+    setIpv4Address(QString());
+    setState(Idle);
+    setStatusMessage(QStringLiteral("Disconnected"));
 }
 
 bool P2PDiscovery::ensureFirewallZone(QString *errorMessage) const

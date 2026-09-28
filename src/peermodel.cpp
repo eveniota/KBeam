@@ -95,3 +95,13 @@ QString PeerModel::peerMac(const QString &uni) const
     }
     return {};
 }
+
+QString PeerModel::peerName(const QString &identifier) const
+{
+    for (const auto &peer : m_peers) {
+        if (peer.mac.compare(identifier, Qt::CaseInsensitive) == 0 || peer.uni == identifier) {
+            return peer.name;
+        }
+    }
+    return {};
+}

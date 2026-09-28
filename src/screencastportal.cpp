@@ -267,9 +267,7 @@ void ScreencastPortal::openPipeWireRemote(uint nodeId)
         return;
     }
 
-    setStatusMessage(QStringLiteral("Screencast ready (fd=%1, node=%2)")
-                         .arg(fd)
-                         .arg(nodeId));
+    setStatusMessage(QStringLiteral("Screencast ready"));
     Q_EMIT started(fd, nodeId);
 }
 

@@ -39,6 +39,7 @@ public:
     void removePeer(const QString &uni);
     QString peerUni(const QString &mac) const;
     QString peerMac(const QString &uni) const;
+    QString peerName(const QString &identifier) const;
 
 private:
     QList<PeerInfo> m_peers;
