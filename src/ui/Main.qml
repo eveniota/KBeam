@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Mradul Pal <mradulpal@outlook.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts

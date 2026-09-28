@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Mradul Pal <mradulpal@outlook.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.24)
 project(kbeam VERSION 0.1 LANGUAGES CXX)
 
