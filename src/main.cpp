@@ -64,7 +64,6 @@ int main(int argc, char **argv)
             }
         });
 
-    // Start RTSP server listening on 0.0.0.0:7236 upfront (matching GND lifecycle)
     wfdServer.start(QStringLiteral("0.0.0.0"));
 
     // Update RTSP presentation address when P2P IP is assigned; stop active pipeline when disconnected
