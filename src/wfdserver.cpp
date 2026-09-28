@@ -3,6 +3,7 @@
 //
 
 #include "wfdserver.h"
+#include <QDebug>
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 
@@ -24,11 +25,26 @@ QString WFDServer::statusMessage() const
     return m_statusMessage;
 }
 
+void WFDServer::setServerAddress(const QString &address)
+{
+    if (!address.isEmpty()) {
+        m_bindAddress = address;
+        qDebug() << "KBeam: Updated WFD server RTSP address to:" << m_bindAddress;
+    }
+}
+
 void  WFDServer::start(const QString &bindAddress)
 {
+    if (m_server && m_attachId != 0) {
+        if (!bindAddress.isEmpty() && bindAddress != QStringLiteral("0.0.0.0")) {
+            setServerAddress(bindAddress);
+        }
+        return;
+    }
+
     stop();
     m_server = gst_rtsp_server_new();
-    m_bindAddress = bindAddress;
+    m_bindAddress = (!bindAddress.isEmpty() && bindAddress != QStringLiteral("0.0.0.0")) ? bindAddress : QStringLiteral("127.0.0.1");
 
     g_signal_connect(
         m_server, "client-connected",
@@ -36,10 +52,7 @@ void  WFDServer::start(const QString &bindAddress)
             static_cast<WFDServer *>(userData)->handleClientConnected(client);
         }), this);
     gst_rtsp_server_set_service(m_server, rtspService);
-    if (!bindAddress.isEmpty())
-    {
-        gst_rtsp_server_set_address(m_server, bindAddress.toUtf8().constData());
-    }
+    gst_rtsp_server_set_address(m_server, "0.0.0.0");
 
     GstRTSPMountPoints *mounts = gst_rtsp_server_get_mount_points(m_server);
     GstRTSPMediaFactory *factory = gst_rtsp_media_factory_new();

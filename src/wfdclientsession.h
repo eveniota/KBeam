@@ -42,6 +42,7 @@ public Q_SLOTS:
     void sendM3GetParameters();
     void sendM4SetParameter();
     void sendM5TriggerSetup();
+    void sendM16KeepAlive();
 
 private:
     void setState(State state);
@@ -51,6 +52,7 @@ private:
     void handlePlayRequest(GstRTSPContext *ctx);
     void parseM3Response(const QString &body);
 
+    class QTimer *m_keepAliveTimer = nullptr;
     GstRTSPClient *m_client = nullptr;
     State m_state = State::Init;
     QString m_serverAddress;

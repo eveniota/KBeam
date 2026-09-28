@@ -64,24 +64,23 @@ int main(int argc, char **argv)
             }
         });
 
-    // Dynamic RTSP server binding: bind to P2P IP when connected, stop when disconnected
+    // Start RTSP server listening on 0.0.0.0:7236 upfront (matching GND lifecycle)
+    wfdServer.start(QStringLiteral("0.0.0.0"));
+
+    // Update RTSP presentation address when P2P IP is assigned; stop active pipeline when disconnected
     QObject::connect(&discovery, &P2PDiscovery::ipv4AddressChanged,
         [&discovery, &wfdServer, &pipeline, &session]() {
             const QString ip = discovery.ipv4Address();
             if (!ip.isEmpty()) {
-                qDebug() << "KBeam: Binding WFD RTSP server to P2P IP:" << ip;
-                wfdServer.start(ip);
+                qDebug() << "KBeam: P2P connected with IP:" << ip;
+                wfdServer.setServerAddress(ip);
             } else {
-                qDebug() << "KBeam: P2P disconnected, stopping server and pipeline.";
+                qDebug() << "KBeam: P2P disconnected, stopping active pipeline.";
                 pipeline.stop();
-                wfdServer.stop();
                 session.fd = -1;
                 session.sinkPort = 0;
             }
         });
-
-    // Fallback: start on localhost for local testing (ffplay / VLC)
-    wfdServer.start(QStringLiteral("0.0.0.0"));
 
     engine.loadFromModule("org.kde.kbeam", "Main");
     return app.exec();

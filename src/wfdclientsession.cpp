@@ -57,12 +57,18 @@ WfdClientSession::WfdClientSession(GstRTSPClient *client, const QString &serverA
             static_cast<WfdClientSession *>(userData)->handlePlayRequest(ctx);
         }), this);
 
+    m_keepAliveTimer = new QTimer(this);
+    connect(m_keepAliveTimer, &QTimer::timeout, this, &WfdClientSession::sendM16KeepAlive);
+
     qDebug() << "KBeam: RTSP sink connected. Waiting" << SettleTimeoutMs << "ms before M1...";
     QTimer::singleShot(SettleTimeoutMs, this, &WfdClientSession::sendM1Options);
 }
 
 WfdClientSession::~WfdClientSession()
 {
+    if (m_keepAliveTimer) {
+        m_keepAliveTimer->stop();
+    }
     if (m_client)
     {
         if (m_closedHandlerId)
@@ -234,6 +240,9 @@ void WfdClientSession::sendM5TriggerSetup()
 void WfdClientSession::handleClosed()
 {
     qDebug() << "KBeam: Client closed RTSP connection.";
+    if (m_keepAliveTimer) {
+        m_keepAliveTimer->stop();
+    }
     Q_EMIT disconnected();
 }
 
@@ -289,10 +298,14 @@ void WfdClientSession::parseM3Response(const QString &body)
     const auto lines = QStringView(body).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (const auto &line : lines) {
         const auto trimmed = line.trimmed();
-        if (trimmed.startsWith(QLatin1String("wfd_client_rtp_ports:"))) {
+        const int colonIdx = trimmed.indexOf(QLatin1Char(':'));
+        if (colonIdx != -1 && trimmed.left(colonIdx).trimmed() == QLatin1String("wfd_client_rtp_ports")) {
             // Expected format: wfd_client_rtp_ports: RTP/AVP/UDP;unicast <primaryPort> <secondaryPort> mode=play
-            const auto tokens = trimmed.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-            if (tokens.size() >= 3) {
+            const auto val = trimmed.mid(colonIdx + 1).trimmed();
+            const auto tokens = val.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+            if (tokens.size() >= 2) {
+                // tokens[0] is "RTP/AVP/UDP;unicast"
+                // tokens[1] is the primary RTP port
                 bool ok = false;
                 const quint16 port = tokens.at(1).toUShort(&ok);
                 if (ok && port > 0) {
@@ -301,6 +314,7 @@ void WfdClientSession::parseM3Response(const QString &body)
                     Q_EMIT rtpPortNegotiated(m_sinkRtpPort);
 
                     sendM4SetParameter();
+                    return;
                 }
             }
         }
@@ -322,6 +336,9 @@ void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
     Q_UNUSED(ctx);
     qDebug() << "KBeam: Sink issued PLAY! Transitioning to Streaming state.";
     setState(State::Streaming);
+    if (m_keepAliveTimer) {
+        m_keepAliveTimer->start(15000);
+    }
 
     QString sinkIp;
     if (m_client) {
@@ -339,4 +356,23 @@ void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
 
     qDebug() << "KBeam: Ready to stream RTP to sink:" << sinkIp << ":" << m_sinkRtpPort;
     Q_EMIT playRequested(sinkIp, m_sinkRtpPort);
+}
+
+void WfdClientSession::sendM16KeepAlive()
+{
+    if (!m_client || m_state != State::Streaming) {
+        return;
+    }
+
+    qDebug() << "KBeam: Sending WFD M16 GET_PARAMETER keep-alive...";
+    GstRTSPMessage msg;
+    memset(&msg, 0, sizeof(msg));
+    gst_rtsp_message_init_request(&msg, GST_RTSP_GET_PARAMETER, WfdUrl);
+    gst_rtsp_message_add_header(&msg, GST_RTSP_HDR_CONTENT_TYPE, WfdContentTypeParameters);
+
+    const GstRTSPResult result = gst_rtsp_client_send_message(m_client, nullptr, &msg);
+    gst_rtsp_message_unset(&msg);
+    if (result != GST_RTSP_OK) {
+        qWarning() << "KBeam: Failed to send M16 keep-alive, error:" << result;
+    }
 }

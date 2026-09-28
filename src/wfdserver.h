@@ -20,8 +20,9 @@ public:
     explicit WFDServer(QObject *parent = nullptr);
 
     QString statusMessage() const;
-    Q_INVOKABLE void start(const QString &bindAddress);
+    Q_INVOKABLE void start(const QString &bindAddress = QStringLiteral("0.0.0.0"));
     Q_INVOKABLE void stop();
+    void setServerAddress(const QString &address);
 
 Q_SIGNALS:
     void statusMessageChanged();
