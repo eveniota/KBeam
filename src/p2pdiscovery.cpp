@@ -1,6 +1,6 @@
-//
-// Created by mradu1 on 7/25/26.
-//
+// SPDX-FileCopyrightText: 2026 Mradul Pal <mradulpal@outlook.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "p2pdiscovery.h"
 #include <NetworkManagerQt/Manager>
 #include <NetworkManagerQt/WifiP2PSetting>

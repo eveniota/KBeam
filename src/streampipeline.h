@@ -1,6 +1,5 @@
-//
-// Created by mradu1 on 8/4/26.
-//
+// SPDX-FileCopyrightText: 2026 Mradul Pal <mradulpal@outlook.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
     
