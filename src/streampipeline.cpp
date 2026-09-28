@@ -67,7 +67,7 @@ void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, 
         setStatusMessage(QStringLiteral("Failed to start capture pipeline"));
         return;
     }
-    setStatusMessage(QStringLiteral("Desktop capture active (fd=%1, node=%2)").arg(fd).arg(nodeId));
+    setStatusMessage(QStringLiteral("Desktop capture active"));
 }
 
 void StreamPipeline::stop()
