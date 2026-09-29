@@ -17,10 +17,7 @@ public:
     explicit StreamPipeline(QObject *parent = nullptr);
     QString statusMessage() const;
 
-    Q_INVOKABLE void start(int fd,
-                           uint nodeId,
-                           const QString &destinationHost = QStringLiteral("127.0.0.1"),
-                           quint16 destinationPort = 5000);
+    Q_INVOKABLE void start(int fd, uint nodeId);
 
     Q_INVOKABLE void stop();
 

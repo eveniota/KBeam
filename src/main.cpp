@@ -38,26 +38,19 @@ int main(int argc, char **argv)
     // Track state between portal capture (fd, nodeId) and RTSP negotiation (sinkIp, sinkPort)
     struct StreamingState {
         int fd = -1;
-        uint nodeId = 0;
-        QString sinkIp;
-        quint16 sinkPort = 0;
     } session;
 
     // When ScreencastPortal yields PipeWire fd and nodeId:
     QObject::connect(&screencast, &ScreencastPortal::started,
         [&pipeline, &session](int fd, uint nodeId) {
             session.fd = fd;
-            session.nodeId = nodeId;
             qDebug() << "KBeam: Screen selected (fd=" << fd << ", node=" << nodeId << "). Startingdesktop capture pipeline...";
             pipeline.start(fd, nodeId);
         });
 
     // When sink sends RTSP PLAY:
     QObject::connect(&wfdServer, &WFDServer::playRequested,
-        [&session, &screencast](const QString &sinkIp, quint16 sinkPort) {
-            session.sinkIp = sinkIp;
-            session.sinkPort = sinkPort;
-
+        [&session, &screencast]() {
             // If user hasn't selected a screen yet, prompt portal now
             if (session.fd < 0) {
                 screencast.start();
@@ -77,7 +70,6 @@ int main(int argc, char **argv)
                 qDebug() << "KBeam: P2P disconnected, stopping active pipeline.";
                 pipeline.stop();
                 session.fd = -1;
-                session.sinkPort = 0;
             }
         });
 

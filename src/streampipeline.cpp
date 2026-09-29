@@ -6,12 +6,6 @@
 #include <QDebug>
 #include <gst/gst.h>
 
-namespace
-{
-constexpr char DefaultHost[] = "127.0.0.1";
-constexpr quint16 DefaultPort = 5000;
-}
-
 StreamPipeline::StreamPipeline(QObject *parent)
     : QObject(parent)
     , m_pipeline(nullptr)
@@ -33,10 +27,8 @@ void StreamPipeline::setStatusMessage(const QString &statusMessage)
     Q_EMIT statusMessageChanged();
 }
 
-void StreamPipeline::start(int fd, uint nodeId, const QString &destinationHost, quint16 destinationPort)
+void StreamPipeline::start(int fd, uint nodeId)
 {
-    Q_UNUSED(destinationHost);
-    Q_UNUSED(destinationPort);
     stop();
 
     const QString pipelineDesc =

@@ -125,11 +125,7 @@ void P2PDiscovery::startDiscovery()
         {
             setState(Error);
             setStatusMessage(QStringLiteral("Discovery Failed"));
-        } else
-        {
-            setState(Discovering);
-            setStatusMessage(QStringLiteral("Discovering..."));
-        }
+        } 
         watcher->deleteLater();
     });
 }
