@@ -176,7 +176,9 @@ void WfdClientSession::sendM4SetParameter()
 
     const QString presentationUrl = QStringLiteral("rtsp://%1:7236/wfd1.0/streamid=0 none").
 arg(m_serverAddress);
-    const QString rtpPorts = QStringLiteral("RTP/AVP/UDP;unicast %1 0 mode=play").arg(m_sinkRtpPort);
+    const QString rtpPorts = QStringLiteral("RTP/AVP/UDP;unicast %1 %2 mode=play")
+            .arg(m_sinkRtpPort)
+            .arg(m_sinkRtcpPort);
 
     const QString body = QStringLiteral(
         "wfd_video_formats: %1\r\n"
@@ -305,13 +307,15 @@ void WfdClientSession::parseM3Response(const QString &body)
             if (tokens.size() >= 2) {
                 // tokens[0] is "RTP/AVP/UDP;unicast"
                 // tokens[1] is the primary RTP port
+                // tokens[2] is the secondary RTCP port (not necessarily present)
                 bool ok = false;
                 const quint16 port = tokens.at(1).toUShort(&ok);
                 if (ok && port > 0) {
                     m_sinkRtpPort = port;
+                    m_sinkRtcpPort = (tokens.size() >= 3) ? tokens.at(2).toUShort() : 0;
+                    qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort
+                             << "RTCP port:" << m_sinkRtcpPort;
                     qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort;
-                    Q_EMIT rtpPortNegotiated(m_sinkRtpPort);
-
                     sendM4SetParameter();
                     return;
                 }

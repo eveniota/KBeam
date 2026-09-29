@@ -69,6 +69,7 @@ int main(int argc, char **argv)
             } else {
                 qDebug() << "KBeam: P2P disconnected, stopping active pipeline.";
                 pipeline.stop();
+                wfdServer.stop();
                 session.fd = -1;
             }
         });

@@ -34,7 +34,6 @@ public:
 Q_SIGNALS:
     void stateChanged(State state);
     void disconnected();
-    void rtpPortNegotiated(quint16 rtpPort);
     void playRequested(const QString &sinkIp, quint16 sinkPort);
 
 public Q_SLOTS:
@@ -57,7 +56,7 @@ private:
     State m_state = State::Init;
     QString m_serverAddress;
     quint16 m_sinkRtpPort = 0;
-
+    quint16 m_sinkRtcpPort = 0;
     gulong m_closedHandlerId = 0;
     gulong m_responseHandlerId = 0;
     gulong m_optionsHandlerId = 0;
