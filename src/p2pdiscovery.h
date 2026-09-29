@@ -53,6 +53,7 @@ private Q_SLOTS:
 private:
     void setState(State state);
     void findDevice();
+    void clearActivePeer();
     bool ensureFirewallZone(QString *errorMessage) const;
     State m_state = Idle;
     void setStatusMessage(const QString &status);
