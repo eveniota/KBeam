@@ -61,6 +61,7 @@ private:
     gulong m_responseHandlerId = 0;
     gulong m_optionsHandlerId = 0;
     gulong m_playHandlerId = 0;
+    QString m_selectedVideoFormat;
 };
 
 

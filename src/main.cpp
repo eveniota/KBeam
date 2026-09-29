@@ -57,22 +57,20 @@ int main(int argc, char **argv)
             }
         });
 
-    wfdServer.start(QStringLiteral("0.0.0.0"));
-
-    // Update RTSP presentation address when P2P IP is assigned; stop active pipeline when disconnected
     QObject::connect(&discovery, &P2PDiscovery::ipv4AddressChanged,
-        [&discovery, &wfdServer, &pipeline, &session]() {
-            const QString ip = discovery.ipv4Address();
-            if (!ip.isEmpty()) {
-                qDebug() << "KBeam: P2P connected with IP:" << ip;
-                wfdServer.setServerAddress(ip);
-            } else {
-                qDebug() << "KBeam: P2P disconnected, stopping active pipeline.";
-                pipeline.stop();
-                wfdServer.stop();
-                session.fd = -1;
-            }
-        });
+            [&discovery, &wfdServer, &pipeline, &session]() {
+                const QString ip = discovery.ipv4Address();
+                if (!ip.isEmpty()) {
+                    qDebug() << "KBeam: P2P connected with IP:" << ip;
+                    wfdServer.start(QStringLiteral("0.0.0.0"));
+                    wfdServer.setServerAddress(ip);
+                } else {
+                    qDebug() << "KBeam: P2P disconnected, stopping active pipeline and server.";
+                    pipeline.stop();
+                    wfdServer.stop();
+                    session.fd = -1;
+                }
+            });
 
     engine.loadFromModule("org.kde.kbeam", "Main");
     return app.exec();

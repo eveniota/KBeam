@@ -180,14 +180,18 @@ arg(m_serverAddress);
             .arg(m_sinkRtpPort)
             .arg(m_sinkRtcpPort);
 
+    const QString videoFormat = !m_selectedVideoFormat.isEmpty()
+            ? m_selectedVideoFormat
+            : QLatin1String(DefaultH264Descriptor);
+
     const QString body = QStringLiteral(
-        "wfd_video_formats: %1\r\n"
-        "wfd_audio_codecs: none\r\n"
-        "wfd_presentation_URL: %2\r\n"
-        "wfd_client_rtp_ports: %3\r\n")
-        .arg(QLatin1String(DefaultH264Descriptor))
-        .arg(presentationUrl)
-        .arg(rtpPorts);
+            "wfd_video_formats: %1\r\n"
+            "wfd_audio_codecs: none\r\n"
+            "wfd_presentation_URL: %2\r\n"
+            "wfd_client_rtp_ports: %3\r\n")
+            .arg(videoFormat)
+            .arg(presentationUrl)
+            .arg(rtpPorts);
 
     const QByteArray utf8Body = body.toUtf8();
 
@@ -317,24 +321,33 @@ void WfdClientSession::parseM3Response(const QString &body)
     for (const auto &line : lines) {
         const auto trimmed = line.trimmed();
         const int colonIdx = trimmed.indexOf(QLatin1Char(':'));
-        if (colonIdx != -1 && trimmed.left(colonIdx).trimmed() == QLatin1String("wfd_client_rtp_ports")) {
-            // Expected format: wfd_client_rtp_ports: RTP/AVP/UDP;unicast <primaryPort> <secondaryPort> mode=play
+        if (colonIdx != -1) {
+            const auto header = trimmed.left(colonIdx).trimmed();
             const auto val = trimmed.mid(colonIdx + 1).trimmed();
-            const auto tokens = val.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-            if (tokens.size() >= 2) {
-                // tokens[0] is "RTP/AVP/UDP;unicast"
-                // tokens[1] is the primary RTP port
-                // tokens[2] is the secondary RTCP port (not necessarily present)
-                bool ok = false;
-                const quint16 port = tokens.at(1).toUShort(&ok);
-                if (ok && port > 0) {
-                    m_sinkRtpPort = port;
-                    m_sinkRtcpPort = (tokens.size() >= 3) ? tokens.at(2).toUShort() : 0;
-                    qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort
-                             << "RTCP port:" << m_sinkRtcpPort;
-                    qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort;
-                    sendM4SetParameter();
-                    return;
+
+            if (header == QLatin1String("wfd_client_rtp_ports")) {
+                const auto tokens = val.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+                if (tokens.size() >= 2) {
+                    bool ok = false;
+                    const quint16 port = tokens.at(1).toUShort(&ok);
+                    if (ok && port > 0) {
+                        m_sinkRtpPort = port;
+                        m_sinkRtcpPort = (tokens.size() >= 3) ? tokens.at(2).toUShort() : 0;
+                        qDebug() << "KBeam: Successfully negotiated sink RTP port:" << m_sinkRtpPort
+                                 << "RTCP port:" << m_sinkRtcpPort;
+                    }
+                }
+            } else if (header == QLatin1String("wfd_video_formats")) {
+                qDebug() << "KBeam: Sink advertised video formats:" << val;
+                const auto vTokens = val.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+                if (vTokens.size() >= 5) {
+                    bool ok = false;
+                    const quint32 sinkCea = vTokens.at(4).toUInt(&ok, 16);
+                    // Intersect with our 1080p30 / 720p modes (0x00000081)
+                    const quint32 selectedCea = (ok && (sinkCea & 0x00000081)) ? (sinkCea & 0x00000081) : 0x00000001;
+                    m_selectedVideoFormat = QStringLiteral("01 01 %1 00000000 00000000 00 0000 0000 00 none none")
+                        .arg(selectedCea, 8, 16, QLatin1Char('0'));
+                    qDebug() << "KBeam: Negotiated video format for M4:" << m_selectedVideoFormat;
                 }
             }
         }
