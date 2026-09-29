@@ -31,7 +31,7 @@ Below are the steps to build:
 
 ### Build:
 ````
-    git clone https://invent.kde.org/mradul/kbeam.git
+    git clone https://invent.kde.org/mradul/kcast.git kbeam
     cd kbeam
     cmake -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build
