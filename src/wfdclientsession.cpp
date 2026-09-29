@@ -254,6 +254,10 @@ void WfdClientSession::handleResponse(GstRTSPContext *ctx)
         return;
     }
 
+    if (ctx->session) {
+        gst_rtsp_session_touch(ctx->session);
+    }
+
     GstRTSPStatusCode statusCode = GST_RTSP_STS_INVALID;
     gst_rtsp_message_parse_response(ctx->response, &statusCode, nullptr, nullptr);
 
@@ -264,8 +268,18 @@ void WfdClientSession::handleResponse(GstRTSPContext *ctx)
         return;
     }
 
+    GstRTSPMethod requestMethod = GST_RTSP_INVALID;
+    if (ctx->request)
+    {
+        gst_rtsp_message_parse_request(ctx->request, &requestMethod, nullptr, nullptr);
+    }
+
     if (m_state == State::M1Sent)
     {
+        if (requestMethod != GST_RTSP_INVALID && requestMethod != GST_RTSP_OPTIONS) {
+            qWarning() << "KBeam: Expected response for OPTIONS, got response for method:" << requestMethod;
+            return;
+        }
         qDebug() << "KBeam: Sink accepted M1. Advancing to M3 GET_PARAMETER...";
         sendM3GetParameters();
     } else if (m_state == State::M3Sent)
@@ -289,6 +303,9 @@ void WfdClientSession::handleResponse(GstRTSPContext *ctx)
     } else if (m_state == State::M5Sent)
     {
         qDebug() << "KBeam: Sink acknowledged M5! Waiting for sink RTSP SETUP and PLAY...";
+    }  else if (m_state == State::Streaming)
+    {
+        qDebug() << "KBeam: Sink acknowledged M16 keep-alive (200 OK). Session is healthy.";
     }
 }
 
@@ -322,6 +339,11 @@ void WfdClientSession::parseM3Response(const QString &body)
             }
         }
     }
+    if (m_sinkRtpPort > 0) {
+        sendM4SetParameter();
+    } else {
+        qWarning() << "KBeam: Failed to negotiate valid RTP port from M3 response!";
+    }
 }
 
 void WfdClientSession::handleOptionsRequest(GstRTSPContext *ctx)
@@ -336,7 +358,9 @@ void WfdClientSession::handleOptionsRequest(GstRTSPContext *ctx)
 
 void WfdClientSession::handlePlayRequest(GstRTSPContext *ctx)
 {
-    Q_UNUSED(ctx);
+    if (ctx && ctx->session) {
+        gst_rtsp_session_touch(ctx->session);
+    }
     qDebug() << "KBeam: Sink issued PLAY! Transitioning to Streaming state.";
     setState(State::Streaming);
     if (m_keepAliveTimer) {

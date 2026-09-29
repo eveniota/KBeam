@@ -69,6 +69,8 @@ void  WFDServer::start(const QString &bindAddress)
     gst_rtsp_media_factory_set_shared(factory, TRUE);
 
     gst_rtsp_mount_points_add_factory(mounts, rtspMount, factory);
+    g_object_ref(factory);
+    gst_rtsp_mount_points_add_factory(mounts, "/wfd1.0/streamid=0", factory);
     g_object_unref(mounts);
 
     m_attachId = gst_rtsp_server_attach(m_server, nullptr);
