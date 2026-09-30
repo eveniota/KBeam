@@ -64,16 +64,6 @@ Kirigami.ApplicationWindow {
             ]
         }
 
-        KItemModels.KSortFilterProxyModel {
-            id: wfdPeerModel
-            sourceModel: P2PDiscovery.peers
-            filterRoleName: "hasWfd"
-            filterRowCallback: function (sourceRow, sourceParent) {
-                const idx = sourceModel.index(sourceRow, 0, sourceParent);
-                return sourceModel.data(idx, 260) === true;
-            }
-        }
-
         ListView {
             id: peerList
             clip: true
